@@ -1,0 +1,828 @@
+\documentclass{twxjz1}
+\usepackage{amsmath}
+\usepackage[sort&compress,numbers]{natbib}
+\usepackage{fancyvrb,tabularx,float,wrapfig,subfigure}
+\usepackage{rotating,color,array,threeparttable,booktabs,multirow,upgreek}
+
+\usepackage{pifont}
+\usepackage[perpage]{footmisc}  % perpage:每一页的脚注要重新编号;
+\renewcommand{\thefootnote}{\ding{\numexpr191+\value{footnote}}}  %使用圆圈  脚注    181是黑底，191白底———这会影响文章首页的页脚“资助项目”
+
+\newcommand*{\package}[1]{\texttt{#1}}
+
+\usepackage[hang]{caption2}
+\renewcommand{\captionlabeldelim}{\quad }   %改插图题目的冒号为空格
+\renewcommand{\captionfont}{\zihao{-5}\heiti}
+
+
+\begin{document}
+
+%%  for Editor
+  \Volume{32}{1}
+  \PublishDate{2014}{5}
+  \setcounter{page}{1}
+  \SerialNumber{2014.05.31}
+
+\begin{chinesetitle}
+  \title{弱引力透镜形变信号及其图像精确处理}{}
+
+  \author{罗文涛$^{1,2}$，杨小虎$^{1}$，张友财$^{1,2}$，余瑜$^{1,2}$}
+
+  \institute{(1. 中国科学院~~上海天文台~~星系与宇宙学重点实验室，上海~~200030；\quad  2. 中国科学院大学，北京~~
+  100049}
+  \date{2014-05-19}{2014-12-01}
+  \support{国家自然科学基金~(10925314, 11128306,
+  11121062,11233005)；中科院"宇宙结构起源战略"研究计划（XDB09000000）}
+
+  \email{罗文涛，walt@shao.ac.cn}
+
+  \ShortAuthor{罗文涛，等}
+  \ShortTitle{弱引力透镜}
+
+\maketitle
+\begin{abstract}
+弱引力透镜形变信号的测量需要精确的图像处理，因为信号本身非常弱，椭率变化大小只有千分之几的强度，是其星系本身的内禀椭率形状噪音的几百分之一。需要叠加至少约1000 幅图像才能从星系图像中得到信号。此外，观测设备的光学效应、大气扰动和CCD的像素化效应-点扩散函数（PSF）是图像处理的首要系统误差。怎样改正PSF的系统误差是弱引力图像处理的第一步，也是最重要的一步。首先详细介绍了引力透镜的基础理论和弱引力透镜作为其分支领域的特点。其次，介绍了基于重高斯化和圆化卷积核方法的图像处理管线的建立。我们用Mandelbaum等人(2011)的图像模拟软件将COSMOS的高分辨率空间图像变成低分辨率地面SDSS图像。最后，我们的检验结果表明，对于一个椭率约为0.05的可加PSF 系统误差，经过修正后，只有$10^{-4}$量级的残余；而PSF的另一个可乘系统误差则修正到1\%以下。
+\end{abstract}
+
+\keywords{弱引力透镜；PSF改正；星系}
+ \LabelNumber{P142}
+  \IDCode{A}
+\LabelIDcode{}
+
+\end{chinesetitle}
+
+\section{引\quad  言}
+
+广义相对论的预言之一就引力使光线偏折，爱因斯坦于1915年从理论上推导出了太阳导致掠过其表面光线的偏折角约
+为1.7"；此结果被爱丁顿等人于1919年在一次日蚀的观测中得到证实\mbox{\upcite{Eddington1920}}，给广义相对论一个强有力的支持。这种大质量天体
+使光线偏折的现象称作引力透镜效应。自1979年第一次由Weymann等人观测到类星体的多重像以来\mbox{\upcite{Weymann1979}}，对引力透镜
+现象的研究逐步深入，已经成为天体物理宇宙学的一个重要分支，并且，根据透镜天体的质量以及尺度，细化为三个更为具体的研究
+方向：强引力透镜\mbox{\upcite{Coe2013，Treu2010，Umetsu2014}，
+弱引力透镜\mbox{\upcite{Fu2008，Heymans2013，Mandelbaum2005，Oguri2012，Leauthaud2010}}
+及微引力透镜\mbox{\upcite{Bensby2011，Bensby2013}}。其中，随着SDSS\mbox{\upcite{York2000}}、emph{CFHTLens\mbox{\upcite{Heymans2012}}}、
+HUBBLE\mbox{\upcite{Leauthaud2007}}等大型望远镜的投入应用，越来越多的观测数据为弱
+引力透镜信号的处理提供了广阔的前景。
+
+    因为弱引力透镜信号是直接和透镜天体的引力势有关的，是研究大尺度结构形成的有力工具，所以对其信号的分析可以得到
+前景天体如星系样本等的暗晕二维的密度轮廓、质光比，同时结合星系-质量交叉两点相关$\xi_{mg}$以及星系-星系两点相关$\xi_{gg}$，
+可以对星系形成模型进行约束\mbox{\upcite{Sheldon2003，Yang2003，Yang2007，Yang2008，Yang2008，Yang2009，Yang2012}}。
+对前景星系样本弱引力透镜信号的研究，可以得到星系尺度暗晕的密度轮廓、
+质光比\mbox{\upcite{Mandelbaum2005}}。
+
+    由于弱引力透镜信号很弱，所以信号的提取是一个相当精细的工作。在对单个星系的图像分析中，大部分星系都会受到观测条件影响而产生相对于内禀形状
+约0.3倍的形变；而通常的弱引力透镜效应引起的背景星系的形变约为0.001的水平\mbox{\upcite{Mandelbaum2005a}}。由此估算，
+平均要计算至少1000个背景星系在前景星系作用下的形变才有可能得到信号。此外，考虑到大气视宁度对星系图像产生约为0.01$\sim$0.1
+的系统误差影响，研究点扩散函数(PSF)的影响，需要更多数目的背景星系叠加才可得到信号。这就要求测得弱引力透镜信号的标准是：（1），有足够多的
+背景星系图像；（2），图像有足够高的分辨率；（3），有一定精度的测光红移以便得到密度轮廓的信息。（4），望远镜巡天要足够深；（5），精确
+的图像处理管线。
+
+    本文中，首先介绍了关于引力透镜现象的基础理论；第2介绍章了图像中的弱引力透镜信息以及提取方法；在第3章介绍了我们自己的
+图像处理管线理论依据和建立过程以及模拟数据检验结果；第4章总结了我们的结果，然后对
+管线的将来应用作了展望，并且讨论了当前一些新的图像处理方法。
+
+\section{引力透镜基础理论}
+\subsection{引力透镜几何}
+
+\subsubsection{点质量源模型}
+
+将引力引起的光线偏折和光学类比，则引力引起的折射率和引力势有关\mbox{\upcite{Schneider1992，Narayan1996，Bartelmann1991}}：
+\begin{equation}
+n=1+\frac{2}{c^2}|\Phi|，
+\end{equation}
+光学中偏折角和折射率的关系有：
+\begin{equation}
+\hat{\alpha}=-\int\nabla_{\perp}n\mathrm{d}l=\frac{2}{c^2}\int\nabla_{\perp}\Phi
+\matherm{d}l，
+\end{equation}
+假设从远处光源发出的光信号，经过处于观测者与其之间的一质量为$M$的点质量源附近距离$b$处，则光线偏折大部分发生在视向距离点源$\Delta
+Z\approx \pm b$处（图1所示）。$b$处由点源产生的引力势为：
+\begin{equation}
+\Phi(b,z)=-\frac{GM}{\sqrt{(b^2+z^2)}}，
+\end{equation}
+则推出引力势沿垂直（假设未经弯曲）光线的梯度为：
+\begin{equation}
+\frac{\partial \Phi}{\partial b}=\frac{GMb}{(b^2+z^2)^{(3/2)}}，
+\end{equation}
+结合式(2)得到点质量源在b处产生偏折角：
+\begin{equation}
+\hat{\alpha}=\frac{2}{c^2}\int\nabla_{\perp}\Phi \mathrm{d}z=\frac{4GM}{c^2b}，
+\end{equation}
+这里点源的史瓦西半径为$R_s=\frac{2GM}{c^2}$，所以偏折角就是2倍的史瓦西半径和$b$的比值。太阳的史瓦西半径是2.95$km$，太阳半径为$6.96\times
+10^5$km，则沿太阳表面掠过的光线偏折角约为$1^{''}.7$。
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.4\textwidth]{fig2_1.eps}
+\caption{点质量源透镜几何\mbox{\upcite{Narayan1996。\label{fig:fig2_1}
+\end{figure}
+
+\subsubsection{薄透镜近似}
+
+一般说来，在一个由观测者、背景光源和中间透镜天体组成的系统中，透镜引力势的大小和三者间距离相比很小，可以近似为一个二维薄盘简单模型，如图2所示。
+这个二维薄盘的引力势和投影密度有关，表示为：
+\begin{equation}
+\Sigma(\bm{\xi})=\int\rho(\bm{\xi},z)\mathrm{d}z，
+\end{equation}
+其中$\bm{\xi}$是二维透镜平面的方位矢量。这个薄盘在$\bm{\xi}$处产生的偏折角是：
+\begin{equation}
+\hat{\alpha}=\frac{4GM(\xi)}{c^2\xi}，
+\end{equation}
+$M(\xi)$表示在距离盘中心$\xi$内的所有质量$M(\xi) = 2\pi\int_0^{\xi}
+\Sigma(\xi^{'})\xi^{'}\mathrm{d}\xi^{'}$。
+
+\begin{figure}[t]
+ \centering
+ \includegraphics[width=0.4\textwidth]{fig2_2}
+ \caption{薄盘近似透镜几何\mbox{\upcite{Narayan1996}。}
+ \label{fig:fig2_2}
+\end{figure}
+
+\subsubsection{等温球模型}
+
+对于一个暗物质晕来讲，可以简单近似为一个暗物质粒子行为近似于束缚在一定范围内的理想气体，则粒子的压强和密度的关系为：
+\begin{equation}
+p=\frac{\rho kT}{m}，
+\end{equation}
+$m$为单个暗物质粒子质量，$\rho$为粒子密度，在热平衡状态下，满足：
+\begin{equation}
+m\sigma_v^2=kT，
+\end{equation}
+假设$\sigma_v$在整个暗晕内不变化，并且稳定（这里稳定是指不塌缩也不膨胀，达到引力势能和动能平衡）则有：
+\begin{equation}
+\frac{p'}{\rho}=-\frac{GM(r)}{r^2}，\quad \frac{\mathrm{d}M(r)}{\mathrm{d}r}=4\pi，
+r^2\rho
+\end{equation}
+结合上述公式得到等温球模型的密度轮廓：
+\begin{equation}
+\rho(r)=\frac{\sigma_v^2}{2\pi G}\frac{1}{r^2}，
+\end{equation}
+其投影密度为：
+\begin{equation}
+\Sigma(\xi)=\frac{\sigma_v^2}{2G}\frac{1}{\xi}，
+\end{equation}
+进而得到偏折角的大小为：
+\begin{equation}
+\hat{\alpha}=4\pi\frac{\sigma_v^2}{c^2}=(1''.4)(\frac{\sigma_v^2}{220\mathrm{km\cdots}^{-1}})^2，
+\end{equation}
+
+除了等温球模型外，暗物质晕的密度轮廓可以用NFW的形式更精确地描述\mbox{\upcite{NFW1997}}，对应的面密度轮廓可见杨小虎等人(2003)\mbox{\upcite{Yang2003}}。
+
+\subsubsection{透镜方程}
+
+设光线未偏折时与系统的中轴（透镜中心和观测者所成的直线）角度为$\beta$，观测到的角度是$\theta$。观测者到透镜、
+透镜到光源以及观测者到光源三者的距离分别是$D_d$，$D_{ds}$，$D_s$。为了更方便的描述透镜的几何，我们引进约化偏折角的概念：
+\begin{equation}
+\alpha=\frac{D_{ds}}{D_s}\hat{\alpha}，
+\end{equation}
+从图3的几何当中可以看出$\theta D_s=\beta D_s-\hat{\alpha}D_{ds}$，
+\begin{equation}
+\beta=\theta-\alpha
+\end{equation}
+这个方程称作透镜方程。如果我们考虑一个固定面密度的透镜，则约化偏折角可以表示为：
+\begin{equation}
+\alpha=\frac{D_{ds}}{D_s}\frac{4G}{c^2\xi^2}(\Sigma\pi\xi^2)=\frac{4\pi
+G\Sigma}{c^2}\frac{D_dD_{ds}}{D_s}\theta，
+\end{equation}
+其中$\xi=D_d\theta$。从透镜方程可以看出，当源的位置处于透镜几何中轴时（$\beta=0$），可解出：
+\begin{equation}
+\Sigma_{\mathrm{crit}}=\frac{c^2}{4\pi G}\frac{D_s}{D_dD_{ds}}，
+\end{equation}
+$\Sigma_{\mathrm{crit}}$称为临界面密度。这时$\theta$有无穷解，说明在临界面密度处，物体的像呈现一个环状结构，叫做爱因斯坦环。
+临界密度就是爱因斯坦环内所包含物质的面密度。这个环的大小跟透镜的质量有关，
+\begin{equation}
+\theta_E=[\frac{4GM(\theta_E)}{c^2}\frac{D_{ds}}{D_dD_s}]^{1/2}，
+\end{equation}
+定义离透镜中心$R$处的投影密度与临界密度比为会聚强度(convergence)，$\kappa=\frac{2\Sigma(R)}{\Sigma_{\mathrm{crit}}}$。当$\kappa\ll
+1$时，称作弱引力透镜； 当$\kappa\geq
+1$时，对应尺度$R$产生的形变很强，表现为巨大光弧，甚至多重像，称为强引力透镜。
+
+为了将约化偏折角和引力势更方便地表示，引入有效透镜势$\phi$的概念，
+\begin{gather}
+\alpha=\nabla_{\theta}\phi，\\
+\phi(\theta)=\frac{D_{ds}}{D_dD_s}\frac{2}{c^2}\int\Phi(D_d\theta,z)\mathrm{d}z，
+\end{gather}
+这样有了透镜方程，就可以建立源平面$\beta$和像平面$\theta$间的雅克比矩阵，
+\begin{equation}
+\mathcal{A}=\frac{\partial\beta}{\partial\theta}=(\delta_{ij}
+-\frac{\partial\alpha}{\partial\theta})
+=(\delta_{ij}-\frac{\partial^2\phi}{\partial\theta_i\partial\theta_j})，
+\end{equation}
+为表达方便我们设：
+\begin{equation}
+\phi_{ij}=\frac{\partial^2\phi}{\partial\theta_i\partial\theta_j}，
+\end{equation}
+定义
+\begin{gather}
+\kappa=\frac{1}{2}(\phi_{11}+\phi_{22})，\\
+\gamma_1=\frac{1}{2}(\phi_{11}-\phi_{22})=\gamma cos[2\varphi])，\\
+\gamma_2=\phi_{12}=\phi_{21}=\gamma sin[2\varphi]，\\
+\gamma=\sqrt{\gamma_1^2+\gamma_2^2}，
+\end{gather}
+则雅克比矩阵$\mathcal{A}$可以表示为
+\begin{equation}
+\mathcal{A}=\begin{pmatrix}1-\kappa-\gamma_1 & -\gamma_2\\-\gamma_2
+& 1-\kappa+\gamma_1\end{pmatrix}，
+\end{equation}
+其中，$\kappa$是会聚的另外一种数学解释，表示放大背景发光源的面积；$\gamma$称作剪切(shear)，表示改变发光源的形状。
+图4给出了两种效应对于一个圆形发光源的形状和大小的改变。放大的效应可以用放大率来量化，
+\begin{equation}
+\mu(\theta)=\frac{1}{\mathcal{A}}=\frac{1}{(1-\kappa)^2-|\gamma|^2}，
+\end{equation}
+联合式(23)-(26)求解，
+\begin{equation}
+\gamma=\frac{1}{\pi}\int
+\mathrm{d}^2\theta'\mathcal{D}(\theta-\theta')\kappa(\theta')，
+\end{equation}
+其中，
+\begin{equation}
+\mathcal{D}(\theta)=\frac{\theta_2^2-\theta_1^2-2i\theta_1\theta_2}{\theta_1^2+\theta_2^2}，
+\end{equation}
+
+\begin{figure}[t]
+ \centering
+ \includegraphics[width=0.4\textwidth]{fig2_3}
+ \caption{一般情况下透镜几何示意\mbox{\upcite{Narayan1996}。}
+ \label{fig:fig2_3}
+\end{figure}
+
+\begin{figure}[t]
+ \centering
+ \includegraphics[width=0.4\textwidth]{fig2_4}
+ \caption{会聚和剪切对圆形背景源的大小和形状的改变\mbox{\upcite{Narayan1996}。}
+ \label{fig:fig1_14}
+\end{figure}
+
+\subsection{切向形变的测量}
+    在一个弱引力透镜系统中，为了确定观测中像的形变和引力势之间的关系，可以利用有效透镜势进行计算，表示为：
+\begin{equation}
+\psi (\bm{ \theta} ) = {{D_{ls} } \over {D_l D_s }}{2 \over {c^2
+}}\int {\Phi (D_l \bm{\theta} ,z)\mathrm{d}z}，
+\end{equation}
+其中$\bm{\theta}$是源平面上的位置矢量,$D_l$，$D_s$以及$D_{ls}$分别是观测者到透镜星系、源星系和透镜星系与源星系之间的角直径
+距离，$\Phi$是红移在d$z$和$D_l\bm{\theta}$范围内物质产生的引力势，$c$是光速，积分表示需考虑从观测者到源星系之间所有物质。
+进一步可以从有效透镜势中得出切向形变的表达式：
+\begin{equation}
+\psi _{ij}  = {{\partial ^2 \psi } \over {\partial \theta _i
+\partial \theta _j }}，
+\end{equation}
+\begin{equation}
+\gamma _ +   = {1 \over 2}(\psi _{11}  - \psi _{22} ) = \gamma (\vec
+\theta )\cos [2\phi (\vec \theta )]，
+\end{equation}
+\begin{equation}
+\gamma _ \times   = \psi _{12}  = \psi _{21}  = \gamma (\vec \theta
+)\sin [2\phi (\vec \theta )].
+\end{equation}
+切向形变可以通过对图像分析单个星系椭率来得到：
+\begin{equation}
+(e_ +  ,e_ \times  ) = \vec e_o  + (\gamma _ +  e_ +  ,\gamma _
+\times  e_ \times  ).
+\end{equation}
+由于弱引力透镜的信号很弱，所以单个星系的椭率是星系内禀形状$\bm{e}_o$主导。假设宇宙中星系椭率的分布是各向同性的，则大量星系椭率的叠加
+可以消除此内禀项，只留下弱引力透镜产生的形变信号。这是弱引力透镜信号测量的基本理念。
+
+    还可以将切向形变和二维投影物质面密度联系起来\mbox{\upcite{Johnston2007，Rozo2007，Sheldon2006，Yang2006a，Yang2006b，Li2014}}：
+\begin{equation}
+\Delta \Sigma  = \gamma _T \Sigma _{\mathrm{crit}}  = \bar \Sigma ( < R) -
+\Sigma (R)
+\end{equation}
+这样就可以计算一个有共同特征的前景星系样本的二维物质分布。这里，$\Delta\Sigma$是以前景星系为中心、以$R$为半径内部平均面密度和半径
+在$R$处的圆环内的平均面密度，$\Sigma_{\mathrm{crit}}$是临界密度。
+\subsection{切向形变的量化}
+    单个星系图像分析、形状的测量是计算弱引力透镜信号的基础。对于一个背景星系的图像，其包含形状信息的是表面亮度分布。通过
+对表面亮度的分析，可以得出一个加有自适应的椭圆高斯权重函数的二阶矩$Q_{ij}$。每一个背景星系的图像
+的高斯权重函数，可以通过迭代的方法使之适合被测星系面亮度分布。如果通过迭代，权重函数不收敛，则将其略去不予计算。
+\begin{equation}
+Q_{ij}=\sum\limits_{k,l} {I_{k,l} G_{k,l} x_i x_j }，
+\end{equation}
+其中，$I_{k,l}$是减去天光背景后的第($k,l$)个像素的强度，$G_{k,l}$是高斯权重，$x_i$是这个像素离中心最亮像素的坐标($i=1,2$)。通过
+二阶矩可以定义被测天体椭率的参数\mbox{\upcite{Bernstein2002}}：
+\begin{equation}
+e_ +   = {{Q_{11}  - Q_{22} } \over {T_g}}，
+\end{equation}
+\begin{equation}
+e_ \times = {{2Q_{12} } \over {T_g}}，
+\end{equation}
+其中，$T_g=Q_{11}+Q_{22}$。两个有关椭率的参数可以定义一个复数$\bm{e}=e_++ie_\times$作为计算切向形变
+的椭率。如果将引力透镜信号和PSF的影响看作我们观测到的星系的图像扰动，则我们所计算的椭率可以写成以下形式\mbox{\upcite{Fischer2000}}：
+\begin{equation}
+\bm{e}_{\mathrm{true}}=\bm{e}_{\mathrm{measure}}+S_{\mahtrm{sm}}\times\bm{e}_{\mathrm{star}}，
+\end{equation}
+$\bm{e}_{\mathrm{true}}$是星系未经PSF污染的椭率，$\bm{e}_{\mathrm{measure}}$是测量的椭率。$\bm{e}_{\mathrm{star}}$是被测星系周围恒星的椭率作为PSF的圆
+化(smear)改正，$S_{sm}$称作圆化率( smear or
+dilution)，后面我们会具体给出PSF改正的具体形式\mbox{\upcite{Mandelbaum2005a}}。椭率和切向形变通过响应因子$\Re$联系起来，
+\begin{equation}
+(\gamma _ +  ,\gamma _ \times  ) = \frac{{{\sum\limits_{i = 1}^{Ns} {w_i}
+(e_{i + } ,e_{i \times } )} }}{ {2\Re \sum\limits_{i = 1}^{Ns} {w_i}}}，
+\end{equation}
+其中,$w_i$是计算的每个椭率的权重，定义为：
+\begin{equation}
+w = {1 \over {\sigma _{SN}^2  + \sigma _e^2 }}，
+\end{equation}
+
+$\sigma_{SN}$是样本的背景噪音，$\sigma_e$是每个星系测量椭率的误差。
+
+    测量星系椭率的误差$\sigma_e$是由天光背景和CCD暗流泊松分布给出的，这种情况适合表面亮度是高斯分布的情况\mbox{\upcite{Hirata2003}}。这种图像本身
+的噪声会对二阶距的计算产生偏差(bias)，主要是因为这种噪声会改变星系图像光度的分布，改变中心最亮像素的位置。
+\begin{equation}
+\sigma_e=(\frac{N_{gal}}{N_{psf}})\times\sqrt{\frac{64}{27N_e}}，
+\end{equation}
+$N_e$为来自被测星系的光子数目。
+
+    对于权重因子的计算也有几种不同的方法，但是对整体结果的影响不是非常大，并且权重因子的选择跟观测设备有一定的关系。
+也有一些人采用椭率的其他定义方法，如用等光度线定义的长短轴比率
+\begin{equation}
+(e_ +  ,e_ \times  ) = {{1 - \beta ^2 } \over {1 + \beta ^2 }}(\cos
+2\varphi ,\sin 2\varphi )，
+\end{equation}
+其中$\beta=b/a$，为星系图像等光度线长短轴之比，$\varphi$是长轴的方位角(East
+of North)。
+
+    给定一个位置（赤经，赤纬）的前景星系，以前景星系到被测的背景星系为垂直视线的径向坐标，以垂直视线和此径向坐标为切向，以前景星系中心
+为中心，可以定义一个坐标系。最终要得到的形变是先前定义的矢量$\bm
+e$在此坐标切向的投影。假设背景星系长轴和切向的夹角为$\psi$，则可以根据坐标转换矩阵得到
+\begin{equation}
+\left( {e_t ,e_{45} } \right) = R (e_ +  ,e_ \times )，
+\end{equation}
+其中$R$是坐标旋转矩阵，$e_t$是投影到切向的形变，$e_{45}$是沿切向旋转$45^o$的形变。$e_{45}$之加权平均是否为零
+可以作为信号是否有效的检验标准之一。
+\section{PSF系统误差改正}
+\subsection{PSF对图像形状的影响}
+PSF对图像的影响，其中各向异性是最主要的，它会造成两方面的影响：
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=0.3\textwidth]{fig3_11psff}
+ \includegraphics[width=0.3\textwidth]{fig3_12psfc}
+ \includegraphics[width=0.3\textwidth]{fig3_13psfd}
+ \caption{三个不同椭率的PSF}
+ \label{fig:fig2_6psf}
+\end{figure}
+
+（1），对图像几何中心(centroid)的测量有影响。Bernstein和Jarvis
+指出几何中心的测量误差$\delta x$或者 $\delta
+y$会传递到给$\bm{e}$产生$\delta
+x^2$的误差\mbox{\upcite{Bernstein2002}}。如果$\delta x$大小和$\delta
+y$相当则，这个误差不会对$\bm{e}$产生太大影响；
+但是如果因为PSF各向异性$|e|\neq 0$并且$e_+>e_{\times}$，使得$\delta
+x>\delta
+y$，这样，会造成中心的测量两个方向误差不同而引进新的$e$的误差。
+图5给出了3个椭率不同的PSF(A, B,
+C)，表格1列出了3个PSF的椭率大小，从A到C分别代表理想对称PSF，SUBARU巡天典型PSF，
+以及SDSS巡天典型PSF各向异性大小。图6给出了模拟真实观测的图像的一个实例，这组模拟数据按照SDSS观测条件，
+更详细的模拟数据介绍将在下面检验过程中给出。图7显示了3种PSF对几何中心测量误差的影响。
+我们可以从图中明显地看出椭率最大的PSF C $e_+>e_{\times}$对$\delta x,
+\delta y$的影响最大。
+
+\begin{table*}[b!]
+\begin{center}
+\caption{\label{tbl-1}图5中给出的3个PSF的椭率}
+\begin{tabular}{lcc}
+\hline psf type &e1\_psf & e2\_psf  \\
+ \hline
+A & $-0.0006$ & $0.0002$\\
+B & $-0.0046$ & $0.0091$\\
+C & $0.1142$  & $0.0220$\\
+\hline
+\end{tabular}
+\end{center}
+\end{table*}
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=0.6\textwidth]{fig3_2}
+ \caption{模拟SDSS r波段图像实例}
+ \label{fig:uni}
+\end{figure}
+
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=0.8\textwidth]{fig3_3centroid}
+ \caption{不同的PSF对$\delta x, \delta y$的影响，PSF C是各向异性最大的，也是对中心测量误差的差别影响最大的。}
+ \label{fig:fig2_6centroid}
+\end{figure}
+
+（2），各向异性的另一个影响是造成可加性的系统误差$\bm{e}_{\mathrm{psf}}$从而造成测量的$\gamma_T$有一个相对平行偏移\mbox{\upcite{Fischer2000}}。
+图8显示了由于PSF引起的测量剪切信号和真实剪切信号之间的差异。各向异性对椭率的影响直接影响到由形状的斯托克斯参量得到的方位角。
+假设一个方位角的分布为平均分布的模拟样本，
+对称的PSF不会对其分布有任何影响，而有椭率的PSF使得分布改变，偏向PSF主轴的指向。图9是两种不同PSF(a是对称PSF
+A，右边是不对称的PSF
+C)对方位角分布的影响。可以看出各向异性对方位角是有影响的，对椭率小的星系图像影响更大。对于恒星的图像，应该是个点源，
+但是经过PSF卷积，变成具有椭率的面源。因此，确定恒星样本的图像，是对PSF模拟、检验和改正PSF效应的一个重要环节。
+图10给出了SDSS巡天中一块天区星系椭率的极化图(a)以及改正后的图像(b)。
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=0.6\textwidth]{fig3_6}
+ \caption{PSF各向异性对shear的测量造成的影响}
+ \label{fig:fig2_9}
+\end{figure}
+
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=0.4\textwidth]{fig3_5_1}
+ \includegraphics[width=0.4\textwidth]{fig3_5_2}
+ \caption{a：对称PSF A对方位角的分布影响，b：不对称的PSF C对方位角测量的影响}
+ \label{fig:fig2_10}
+\end{figure}
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=0.4\textwidth]{fig3_7_2}
+ \includegraphics[width=0.4\textwidth]{fig3_7_1}
+ \caption{a：SDSS恒星图像极化，b：PSF改正后的极化图}
+ \label{fig:fig2_11}
+\end{figure}
+
+PSF各向同性使得椭率变小，造成偏差，在3.2节我们会详细描述如何改正。除此之外，天光背景等都会带来测量上的系统误差。
+目前改正天光的方法就是在星系图像周围划出没有其他光源的区域，找出像素值分布的中值，然后在整体的图像减去这个中值即可。
+
+\subsection{BJ2方法}
+\emph{$\mathrm{PSF}$各向异性:}BJ02方法是Bernstein和Jarvis
+于2002年提出的方法\mbox{\upcite{Bernstein2002}}。观测到的图像假设为$I^o(\bm{x})$，则
+\begin{equation}
+I^0(\bm{x})=P\otimes I^i，
+\end{equation}
+其中$I^i$为真实图像，$P$为PSF。如果我们可以建立一个卷积核$P'$使得
+\begin{equation}
+P\otimes P'=\delta，
+\end{equation}
+即有
+\begin{equation}
+I^f=P'\otimes P\otimes I^i=\delta\otimes I^i=I^i，
+\end{equation}
+$P'$可以通过对恒星图像用拉盖尔多项式展开来表示：
+\begin{gather}
+P'=\sum b_{bq}'\psi_{pq}'(r,\theta)，\\
+P=\sum b_{bq}\psi_{pq}'(r,\theta)，
+\end{gather}
+其中
+\begin{gather}
+\psi_{pq}'(r,\theta)=\frac{(-1)^q}{\sqrt{\pi}\sigma^2}\sqrt{\frac{q!}{p!}}
+(\frac{r}{\sigma})^m\mathrm{e}^{im\theta}\mathrm{e}^{-r^2/2\sigma^2}L_q^{(m)}(\frac{r^2}{\sigma^2})
+\quad (p\geq q)，\\
+\psi_{pq}'=\bar{\psi_{qp}'}，\\
+m=p-q，
+\end{gather}
+是量子谐振本征方程(QHE)，$L_q^{(m)}(x)$是拉盖尔多项式，由其母函数定义：
+\begin{equation}
+(1-z)^{-q-1}exp(\frac{xz}{z-1})=\sum_{m=0}^{\infty}L_m^{(q)}(x)z^m，
+\end{equation}
+对于理想的情况有：
+\begin{gather}
+P'\otimes P=\sum b^{*'}{bq}\psi^{*'}_{pq}(r,\theta)=\delta(x)，\\
+\Rightarrow b^{*'}_{pq}=[(-1)^p/\sqrt{\pi}]\delta_{pq}，
+\end{gather}
+其中$\delta_{pq}$为狄拉克函数。这个条件可以用来约束$b^{*'}_{pq}$的值。如果我们能找到合适的卷积核$P'$，理论上讲，所有的PSF各向异性的效应都可以去除。
+在实际的像素化的图像中，数据是离散的，在建立卷积核的时候可以看成是一个单位矩阵加上一个所有元素之和为零的矩阵，
+这样可以保持卷积后原来图像的流量不变。这个卷积核首先可以看作由图像强度分布沿x，y轴的偏微分加上单位矩阵构成，即：
+\begin{equation}
+K=\sum_{ij}K_{ij}D_{ij}，
+\end{equation}
+其中，
+\begin{equation}
+D_{ij}=(\frac{\partial}{\partial x}+i\frac{\partial}{\partial
+y})^i(\frac{\partial}{\partial x}-i\frac{\partial}{\partial y})^j.
+\end{equation}
+对于由像素构成的离散图像的偏微分可以用矩阵卷积表示如下， 沿$x$轴有：
+\begin{equation}
+\frac{\partial I}{\partial x}=\begin{pmatrix}0 & 0 &
+0\\-1/2&0&1/2\\0&0&0\end{pmatrix}\otimes I，
+\end{equation}
+沿$y$轴有
+\begin{equation}
+\frac{\partial I}{\partial y}=\begin{pmatrix}0 & 1/2 &
+0\\0&0&0\\0&-1/2&0\end{pmatrix}\otimes I，
+\end{equation}
+可通过以上关系表示出$D_{ij}$的$3\times 3$组成部分：
+\begin{gather}
+D_{10}=\begin{pmatrix}0 & i(1/2) &
+0\\-1/2&0&1/2\\0&i(-1/2)&0\end{pmatrix}，\\
+D_{01}=\overline{D_{10}}，\\
+D_{20}=\begin{pmatrix}i(-1/2) & -1 &
+i(1/2)\\1&0&1\\i(1/2)&-1&i(-1/2)\end{pmatrix}，\\
+D_{02}=\overline{D_{20}}，\\
+D_{11}=\begin{pmatrix}0 & 1 &
+0\\1&-4&1\\0&1&0\end{pmatrix}.\\
+\end{gather}
+这里还有一个矩阵$\bm{k}_{ij}$要确定，首先要满足$\bm{k}_{ij}=\overline{\bm{k}_{ji}}$，因为$D_{ij}$是复数，而最后的卷积核$K$是实数。
+由式（49），（50）我们知道$P',P$之间的不同在于系数$b_{pq}'，
+b_{pq}$，结合方程（55）我们可以得到：
+\begin{equation}
+\vec{b}'=\sum_{ij}k_{ij}D_{ij}\vec{b}
+\end{equation}
+其中$\vec{b}$是可以通过对恒星图像的观测得到，进而我们可以得到
+\begin{equation}
+(D_{ij}\vec{b})\vec{k}=\vec{b}'
+\end{equation}
+我们可以通过方程（56）对$b'$的约束来得到$\bm{k}_{ij}$，具体计算过程参见参考文献[5]。
+
+建立了卷积核以后，PSF各向异性可以通过卷积图像来修正。下一步就需要修正各向同性。
+
+\emph{$\mathrm{PSF}$各向同性：}这里我们只考虑PSF各向同性的影响，所以可以假定PSF的强度分布为二维圆高斯，星系的图像是椭圆二维高斯。在这种情况下有：
+\begin{gather}
+R=1-T_{psf}/T，\\
+T=\sqrt{det\bm{Q}}，
+\end{gather}
+$\bm{Q}$是二维图像强度分布的二阶矩（37）。这个公式只能改正到一阶，PSF各向同性的二阶效应由分布的kurtosis造成。对于高斯分布的PSF和星系图像来说，
+kurtosis只与$b_{00}, b_{22}$项有关，则改正到二阶的$R$可写为：
+\begin{equation}
+R=1-\frac{T_{psf}}{T}
+\frac{(1-\beta_{22}^{psf})/(1+\beta_{22}^{psf})}
+{(1-\beta_{22}^{gal})/(1+\beta_{22}^{gal})}，
+\end{equation}
+这个复杂的二阶效应改正时非常必要的，图11显示了经过二阶改正和没有经过二阶改正$R$的差异，两种结果的偏差可达5\%以上。
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=0.6\textwidth]{fig3_9}
+ \caption{横坐标是没有二阶改正的$R$，纵坐标是经过改正的$R$，两者偏差可达5\%以上}
+ \label{fig:fig2_16}
+\end{figure}
+
+\subsection{HS03方法}
+
+\emph{$\mathrm{PSF}$各向异性：}
+HS03方法采用重高斯化的方法来修正各向异性。首先假设二维PSF强度分布$g$可以近似为一个高斯$G$，
+\begin{equation}
+g(\bm{x})\approx
+G(\bm{x})=\frac{1}{2\pi\sqrt(detQ)}exp(-\frac{1}{2}x^TQ^{-1}x).
+\end{equation}
+观测图像可以看作是$I^o=g\otimes I^{intr}=G\otimes
+I^{intr}+\epsilon\otimes I^{intr}$， 其中，
+\begin{equation}
+\epsilon=g-G，
+\end{equation}
+则有：
+\begin{equation}
+G\otimes I^{intr}=I^o-\epsilon\otimes I^{intr}，
+\end{equation}
+$I^{intr}$可以通过近似得到，
+\begin{gather}
+I^{intrinsic}=\frac{1}{2\pi\sqrt{detQ^0}}\mathrm{exp}[-\frac{1}{2}x^T(Q^0)^{-1}x]，\\
+Q^0=Q_{gal}-Q_{psf}，
+\end{gather}
+则在二维星系图像造成各向异性的影响可以看作$\epsilon\otimes
+I^{intrinsic}$，在原图像上减掉这部分即可，
+\begin{equation}
+I^{corrected}=I-\epsilon\otimes I^{intrinsic}.
+\end{equation}
+这样我们认为各向异性一阶影响被去掉。
+
+
+\emph{$\mathrm{PSF}$各向同性：}HS03方法中各向同性的改正方法和BJ02中的方法相同，这里不再详细介绍。
+
+\subsection{数值模拟检验}
+两种方法中，HS03方法速度相对快一点，数学形式上相对简单，程序实现比较容易。我们采取了这种方法，编写了相关的图像处理软件。
+采用此种方法的除Hirata和Seljak\mbox{\upcite{Hirata2003}} 外还有Sheldon等人\mbox{\upcite{Sheldon2003，Sheldon2006}，Mandelbaum等人\mbox{\upcite{Mandelbaum2005}}。
+在完成软件编写的基础上，完成了一系列的检验。
+
+\emph{形状测量检验：} 我们首先用自己模拟SDSS
+的$r$波段暗于$17.77mag$的星系图像(图6)，图12给出了真实值和测量值之间的关系。其中可乘误差约为3\%，可加误差为0.01左右。
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=0.8\textwidth]{fig3_10}
+ \caption{模拟数据真实值和测量值的散点图}
+ \label{fig:fig2_12}
+\end{figure}
+真实巡天中，PSF随着时间地点不同而变化；在模拟数据中是固定的，所以真实巡天中可加误差要更小。
+在样本足够大，时间足够长的星系巡天中，可加误差近似为0，表现为$\langle
+e\rangle\approx 0$。
+对SDSS来说，这也说明星系指向各向同性的假设是合理的。图中出现偏离一对一关系较大的数据点，其产生原因是中心的测量受到天光背景影响。
+在天光背景扰动强于星系本身光信号的地方会产生这种影响，这也是我们模拟图像条件比较苛刻造成的。
+图13是NASA在Kaggle上给出调试公开样本的真实值和测量值之间的关系。对于这个调试样本，信噪比相对我们的模拟数据要高，但PSF各向异性大小差不多，
+并且要自己从模拟
+的恒星图像中自己提取PSF的信息。对于这组调试数据，我们测量的可乘误差约为2\%，弥散约为0.0172。
+通过这两组测试，说明我们的软件在恢复图像椭率方面是没有问题的；但是能否恢复shear的信号，还要进一步检验。在这一步检验中，我们用的是STEP2的模拟数据。
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=0.6\textwidth]{fig3_11}
+ \caption{NASA在Kaggle比赛的训练样本测量值和真实值的比较}
+ \label{fig:fig2_13}
+\end{figure}
+
+
+\emph{$\mathrm{SHERA}$(SHEar Reconvolution Analysis：} Mandelbaum等人\ mbox{\upcite{Mandelbaum2005}}发展了模拟图像方法，用COSMOS 真实观测的图像，
+经过处理后加上SDSS典型PSF和形变信号。这种方法的优点在于星系图像是真实图像，不同于以前的模拟依赖各种星系形态假设。
+图14中分别给出了COSMOS高分辨率星系图像（左），软件模拟SDSS图像（中），和真实的与COSMOS
+相对应星系SDSS观测图像。
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=0.3\textwidth]{fig3_14_1}
+ \includegraphics[width=0.3\textwidth]{fig3_14_2}
+ \includegraphics[width=0.3\textwidth]{fig3_14_3}
+ \caption{a:COSMOS图像；b:模拟SDSS图像；c:真实SDSS图像。}
+ \label{fig:fig2_6psf}
+\end{figure}
+在COSMOS图像中，星系核球部分和盘成分清晰可见，模拟后的图像只有核球部分可见，盘成分淹没在
+天光、设备以及光子泊松噪音中。而真实的图像，经过SDSS图像处理管线以后，周围一部分像素设置为0。即便是在这种粗糙的图像中，
+只要叠加足够的背景图像以及处理得当的系统误差，我们也可以得到引力透镜的信号。从图15中可以看出，可乘误差控制在1\%以下，而可加误差在0.1\% 以下。
+
+\begin{figure}[h]
+ \centering
+ \includegraphics[width=0.7\textwidth]{fig3_15}
+ \caption{a:输入信号第一个成分和测量信号比较；b:信号第一个成分残差和输入信号比较；c:下左图是信号第二个成分输入值和测量值得比较；d:第二成分残差和输入信号的比较。}
+ \label{fig:fig2_13}
+\end{figure}
+
+\section{总结与展望}
+\subsection{总结}
+
+对于研究暗物质的分布和星系形成演化的研究，弱引力透镜是一个有力的工具。从理论上讲，弱引力透镜现象测量的是前景
+星系或者星系团所有物质质量，包括重子物质和暗物质，并且不依赖任何模型假设。例如，利用卫星星系动力学测量星系
+团的质量，首先需要假设整个星系团是位力化的\mbox{\upcite{vandenBosch2004a，vandenBosch2004b}}。利用X光的强度估算星系团质量，首先假设
+团内热气体是处于热平衡状态\mbox{\upcite{Weymann1979，Wang2014}}，
+但是AGN反馈\mbox{\upcite{Ulmer2012，Cavaliere2002，Lapi2004}}
+或者并合过程都可以打破这种平衡\mbox{\upcite{Angus2008，Lee2010，Springel2007}}。
+
+但是引力透镜测量工作也有其困难，在于点扩散函数的修正、选择效应等\mbox{\upcite{Hirata2003}}。因此，在做科学测量之前，必须保证图像
+处理软件的精确性。尤其对于未来的高分辨率、大型巡天项目，比如LSST\mbox{\upcite{Ivezic2008，LSST2009，LSST2012}}，
+TMT\mbox{\upcite{Els2009，Sanders2013，Schock2009}}，
+SUBARU\mbox{\upcite{Ichikawa2006，Kaifu1998，Tokunaga1998}}等。统计误差大约有1\%，这就要求
+管线处理精度须好于1\%，否则难以达到大型设备所带来的高精度期望。所以，这一精度要求是国际上专门做引力透镜图像处理的
+学者所要达到的目标，而PSF的重构将一直是其最大的挑战。
+
+基于两种方法我们建立了自己的图像处理软件，并且通过了各种国际认可的测试，下一步要直接测量SDSS
+DR 7的图像数据。其基本结构是：（1），星系图像和对应位置的PSF图像作为输入；（2），用HS03方法计算各向同性的修正因子R；（3），用BJ03方法根据PSF图像计算卷积核，并修正PSF 各向异性产生修正后的椭率参数；（4），将椭率参数、各项同性修正因子$R$，位置红移信息输出到文件。
+
+\subsection{展望}
+在图像处理的研究过程中，我们本着学习传统方法、寻找新方法的思路。掌握了KSB、shapelets、BS02以及HS03方法。
+了解到图像处理中可以用到的数学工具，知道在基于椭率测量的传统方法中，大体分为展开法（拉盖尔多项式，PCA等）、
+模型法（Moffat轮廓或者Sersic轮廓卷积PSF和原图求最概然几率的参数）。还有一个非常有前景的研究方法是在傅里叶空间直接
+推导信号的探测\mbox{\upcite{Zhang2013}}。
+
+从数值模拟中可以知道，不同方法的偏差是不一样的，比较各种方法之间的偏差，对于将来改进方法有很大帮助。我们
+也从模拟和观测两个方面入手，比较不同方法测量的结果，尤其是在观测上，更有指导意义。
+
+
+\begin{thebibliography}{00}
+
+\bibitem{Angus2008} Angus G W,  McGaugh S S,  MNRAS, 2008, 383: 417
+
+\bibitem{Bartelmann1991} Bartelmann M, Schneider P,  A\&A, 1991, 248:349
+
+\bibitem{Bensby2011} Bensby T, et al.,  A\&A,2011, 533: A134
+
+\bibitem{Bensby2013} Bensby T, et al.,  A\&A,2013, 549: A147
+
+\bibitem{Bernstein2002} Bernstein G M, Jarvis M, AJ, 2002, 123: 583
+
+\bibitem{Cavaliere2002} Cavaliere A, Lapi A, Menci N, ApJ, 2002, 581: L1
+
+\bibitem{Coe2013} Coe D, et al., ApJ, 2013, 762: 32
+
+\bibitem{Eddington1920} Eddington A S, Obs, 1920, 43: 228
+
+\bibitem{Els2009} Els S G, Travouillon T, Sch{\"o}ck M, Riddle R, Skidmore W,
+Seguel J, Bustos E, Walker D, PASP, 2009, 121: 527
+
+\bibitem{Fischer2000} Fischer P, et al., AJ, 2000, 120: 1198
+
+\bibitem{Fu2008} Fu L, et al., A\&A, 2008, 479: 9
+
+\bibitem{Heymans2012} Heymans C, et al., MNRAS, 2012, 427: 146
+
+\bibitem{Heymans2013} Heymans C, et al., 2013, MNRAS, 2013, 432: 2433
+
+\bibitem{Hoekstra2011} Hoekstra H, Hartlap J, Hilbert S, van Uitert E,,MNRAS, 2011 412: 2095
+
+\bibitem{Hirata2003} Hirata C, Seljak U, MNRAS, 2003, 343: 459
+
+\bibitem{Ichikawa2006} Ichikawa T, et al., SPIE, 2006, 6269,
+
+\bibitem{Ivezic2008} Ivezic Z, et al.,  arXiv:0805.2366, 2008, 
+
+\bibitem{Johnston2007} Johnston D E, et al., arXiv:0709.1159, 2007,
+
+\bibitem{Kaifu1998} Kaifu N, SPIE, 1998, 3352: 14
+
+\bibitem{Kaiser1992} Kaiser N, 1992, ApJ, 1992, 388: 272
+
+\bibitem{Kaiser1995} Kaiser N, Squires G, Broadhurst T, ApJ, 1995, 449: 460
+
+\bibitem{Kaiser1998} Kaiser N, ApJ, 1998, 498: 26
+
+\bibitem{Lapi2004} Lapi A, Cavaliere A, de Zotti G, Menci N, 2004, cgpc.symp,
+
+\bibitem{Lee2010} Lee J, Komatsu E, ApJ, 2010, 718: 60
+
+\bibitem{Leauthaud2007} Leauthaud A, COSMOS,, AAS, 2007, 39: 778
+
+\bibitem{Leauthaud2010} Leauthaud A, et al., ApJ, 2010, 709: 97
+
+\bibitem{Li2014} Li R, et al., MNRAS, 2014, 438: 2864
+
+\bibitem{LSST2009} LSST Science Collaboration, et al., arXiv, arXiv:0912.0201, 2009
+
+\bibitem{LSST2012} LSST Dark Energy Science Collaboration, arXiv, arXiv:1211.0310, 2012
+
+\bibitem{Mandelbaum2005a} Mandelbaum R, et al.,MNRAS, 2005,  361: 1287
+
+\bibitem{Mandelbaum2005} Mandelbaum R, Tasitsiomi A, Seljak U, Kravtsov A V, Wechsler R H,MNRAS, 2005,  362: 1451
+
+\bibitem{Mandelbaum2011} Mandelbaum R, Hirata C M, Leauthaud A, Massey R J, Rhodes J, ascl.soft, 2011, 8002
+
+\bibitem{Massey2007} Massey R, et al., MNRAS, 2007, 376: 13
+
+\bibitem{NFW1997} Navarro, J F, Frenk, C S, \& White, S D M, ApJ, 1997, 490: 493
+
+\bibitem{Narayan1996} Narayan R, Bartelmann M, arXiv:astro-ph/9606001, 1996
+
+\bibitem{Oguri2012} Oguri M, Bayliss M B, Dahle H, Sharon K, Gladders M D,
+Natarajan P, Hennawi J F, Koester B P,MNRAS, 2012,  420: 3213
+
+\bibitem{Rozo2007} Rozo E, et al.,arXiv:astro-ph/0703571 2007
+
+\bibitem{Sanders2013} Sanders G H, JApA, 2013, 34: 81
+
+\bibitem{Schneider1992} Schneider P, Ehlers J, Falco E E,grle.book, 1992
+
+\bibitem{Schock2009} Sch{\"o}ck M, et al., PASP, 2009, 121: 384
+
+\bibitem{Sheldon2003} Sheldon E S, et al., AJ, 2004, 127:2544
+
+\bibitem{Sheldon2006} Sheldon E S, AAS, 2006, 38: 222
+
+\bibitem{Springel2007} Springel V, Farrar G R, MNRAS, 2007, 380: 911
+
+\bibitem{Tokunaga1998} Tokunaga A T, et al., SPIE, 1998, 3354: 512
+
+\bibitem{Treu2010}Treu T, ARA\&A, 2010, 48: 87
+
+\bibitem{Ulmer2012} Ulmer M P, Lima Neto G B, hcxa.conf, 2012
+
+\bibitem{Umetsu2014} Umetsu K, et al., arXiv:1404.1375, 2014
+
+\bibitem{vandenBosch2004a} van den Bosch F, Yang X, Mo H J, bdmh.conf, 2004
+
+\bibitem{vandenBosch2004b} van den Bosch F C, Norberg P, Mo
+H J, Yang X, MNRAS, 2004, 352: 1302
+
+\bibitem{Wang2014} Wang L, et al., MNRAS, 2014, 439: 611
+
+\bibitem{Weymann1979} Weymann R J, Chaffee F H, Jr, Carleton N , Walsh D, Carswell R F, Davis M, ApJ, 1979, 233: L43
+
+\bibitem{Yang2003} Yang X H, Mo H J, Kauffmann G, Chu Y Q, MNRAS, 2003, 339: 387
+
+\bibitem{Yang2006a} Yang X H, Mo H J, van den Bosch F C, cosp, 2006, 36: 524
+
+\bibitem{Yang2006b} Yang X H, Mo H J, van den Bosch F C, Jing Y P, Weinmann S M,
+Meneghetti M, MNRAS, 2006, 373: 1159
+
+\bibitem{Yang2007} Yang X H, Mo H J, van den Bosch F C, Pasquali A, Li C, Barden M, ApJ, 2007, 671: 153
+
+\bibitem{Yang2008} Yang X H, Mo H J, van den Bosch F C, ApJ, 2008, 676: 248
+
+\bibitem{Yang2009} Yang X H, Mo H J, van den Bosch F C, ApJ, 2009, 693: 830
+
+\bibitem{Yang2012} Yang X H, Mo H J, van den Bosch F C, Zhang Y, Han J, ApJ, 2012, 752: 41
+
+\bibitem{York2000} York D G, et al., AJ, 2000, 120: 1579
+
+\bibitem{Zhang2013} Zhang J, Luo W, Foucaud S,arXiv:1312.5514, 2013
+
+
+
+
+
+\end{thebibliography}
+
+
+\newpage
+%% The english abstract section
+\begin{englishtitle}
+
+\title{Weak Gravitational Lensing and Image Processing}{}
+
+\author{LUO Wen-tao$^{1,2}$,\quad YANG Xiao-hu$^{1}$,\quad ZHANG You-cai$^{1,2}$, YU Yu$^{1,2}$}
+
+\institute{(1. Key Laboratory for Research in Galaxies and
+Cosmology, Shanghai Astronomical Observatory, Chinese Academy of
+   Sciences, Shanghai 200030, China;~~ 2. University of Chinese Academy of Sciences, Beijing
+100049, China}
+
+\makeothertitle
+
+\begin{abstract_e}
+Weak lensing measurement requires accurate image processing due to
+the weak signals at 0.1\% level. As galaxies themselves have
+intrinsic shapes which are hundreds
+times stronger than the signals, we have to apply stacking
+technology to get the signals by assuming an isotropic distribution of
+the intrinsic shapes. Moreover, the optical Airy disk together with
+atmospheric seeing may dilute the signals and introduce
+coherent false signals. Among these difficulties, the most important step in weak lensing measurements is to properly correct for the PSF effect. In this paper, we first present the basic theory of weak lensing and the method to measure the tangental shear. Then we discuss in detail the systematics that can be induced by PSF and the methods to correct for this. Here, we built our
+own image processing pipeline based on two methods and tested it using
+Mandelbaum et al. 2011 software. The testing results show that our
+pipeline meets the required $<$1\% level systematic error if the PSF is
+perfectly known. Finally, we give our summary and prospect on the future gravitational lensing studies.
+\end{abstract_e}
+
+\keywordse{gravitational lensing; point spread function(PSF)
+correction; galaxy}
+
+\end{englishtitle}
+\end{document}

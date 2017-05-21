@@ -23,8 +23,8 @@ gal_e_min=0.
 gal_e_max=0.8
 psf_fwhm=[1.5,0.7,0.6,0.5]
 psf_beta=[2.4,2.5,2.3,1.5]
-n = 5000
-m = 50
+n = 50
+m = 10
 xiuzheng = 1.82
 xz = [1,-1]
 k = 0
@@ -90,8 +90,10 @@ for i in range(m):
 	Me1array = [[],[],[],[]]
 	Me2array = [[],[],[],[]]
 	for j in range(4):
-		for p in range(2):
-			for l in range(n):
+		for l in range(n):
+			BJpeerdelete = 0
+			RGpeerdelete = 0
+			for p in range(2):
 				k += 1
 				rng=galsim.UniformDeviate(random_seed+k+1)
 				flux=rng()*(gal_flux_max-gal_flux_min)+gal_flux_min
@@ -113,20 +115,37 @@ for i in range(m):
 				snrog = snr(image0.array,image.array)
 				snrarray[j].append(snrog)
 				#print snrog
-				rst = hsm.EstimateShear(image,final_epsf_image,shear_est='BJ')
-				if rst == 1:
-					wrongBJ = wrongBJ +1
-					print "wrongBJ %f"%wrongBJ
+				if BJpeerdelete != 1:
+					rst = hsm.EstimateShear(image,final_epsf_image,shear_est='BJ')
+					if rst == 1:
+						wrongBJ = wrongBJ +2
+						print "wrongBJ %f"%wrongBJ
+						if p == 0:
+							BJpeerdelete = 1
+						else:
+							BJe1array[j].pop()
+							BJe2array[j].pop()
+							
+					else:
+						BJe1array[j].append(rst.corrected_e1)
+						BJe2array[j].append(rst.corrected_e2)
 				else:
-					BJe1array[j].append(rst.corrected_e1)
-					BJe2array[j].append(rst.corrected_e2)
-				rst = hsm.EstimateShear(image,final_epsf_image,shear_est='REGAUSS')
-				if rst == 1:
-					wrongRG = wrongRG +1
-					print "wrongRG %f"%wrongRG
+					BJpeerdelete = 0
+				if RGpeerdelete != 1:
+					rst = hsm.EstimateShear(image,final_epsf_image,shear_est='REGAUSS')
+					if rst == 1:
+						wrongRG = wrongRG +2
+						print "wrongRG %f"%wrongRG
+						if p==0:
+							RGpeerdelete = 1
+						else:
+							RGe1array[j].pop()
+							RGe2array[j].pop()
+					else:
+						RGe1array[j].append(rst.corrected_e1)
+						RGe2array[j].append(rst.corrected_e2)
 				else:
-					RGe1array[j].append(rst.corrected_e1)
-					RGe2array[j].append(rst.corrected_e2)
+					RGpeerdelete = 0
 				#e1,e2 = elli(image.array)
 				#Me1array[j].append(e1)
 				#Me2array[j].append(e2)

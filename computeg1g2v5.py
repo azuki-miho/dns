@@ -9,9 +9,11 @@ from mytools import *
 import galsim.hsm as hsm
 from mydns import *
 import matplotlib.pyplot as plt
+from Fourier_Quad import Fourier_Quad
 
+FQ = Fourier_Quad()
 random_seed=553728
-sky_level=3.e4
+sky_level=1.e1
 pixel_scale=0.28
 nx=64
 ny=64
@@ -23,8 +25,8 @@ gal_e_min=0.
 gal_e_max=0.8
 psf_fwhm=[1.5,0.7,0.6,0.5]
 psf_beta=[2.4,2.5,2.3,1.5]
-n = 5000
-m = 50
+n = 500
+m = 10
 xiuzheng = 1.82
 xz = [1,-1]
 k = 0
@@ -67,7 +69,7 @@ gal3=galsim.DeVaucouleurs(half_light_radius=1,gsparams=gsparams)
 gal4=galsim.Sersic(half_light_radius=1,n=2.5,gsparams=gsparams)#to be continue
 
 psf=psf1
-final_epsf_image=psf1.drawImage(scale=pixel_scale)
+final_epsf_image=psf1.drawImage(nx=nx,ny=ny,scale=pixel_scale)
 gal = [gal1,gal2,gal3,gal4]
 
 
@@ -75,6 +77,8 @@ BJe1 = [[],[],[],[]]
 BJe2 = [[],[],[],[]]
 RGe1 = [[],[],[],[]]
 RGe2 = [[],[],[],[]]
+FQe1 = [[],[],[],[]]
+FQe2 = [[],[],[],[]]
 Me1 = [[],[],[],[]]
 Me2 = [[],[],[],[]]
 #Wucha = [[],[],[],[]]
@@ -87,6 +91,9 @@ for i in range(m):
 	BJe2array = [[],[],[],[]]
 	RGe1array = [[],[],[],[]]
 	RGe2array = [[],[],[],[]]
+	FQe1array = [[],[],[],[]]
+	FQe2array = [[],[],[],[]]
+	FQnarray = [[],[],[],[]]
 	Me1array = [[],[],[],[]]
 	Me2array = [[],[],[],[]]
 	for j in range(4):
@@ -115,6 +122,10 @@ for i in range(m):
 				snrog = snr(image0.array,image.array)
 				snrarray[j].append(snrog)
 				#print snrog
+				FQg1,FQg2,FQn,FQu,FQv = FQ.shear_est(image.array,final_epsf_image.array,64,background_noise=True,F=False)
+				FQe1array[j].append(FQg1)
+				FQe2array[j].append(FQg2)
+				FQnarray[j].append(FQn)
 				if BJpeerdelete != 1:
 					rst = hsm.EstimateShear(image,final_epsf_image,shear_est='BJ')
 					if rst == 1:
@@ -154,9 +165,12 @@ for i in range(m):
 		BJe2[j].append(meanvalue(BJe2array[j],2*n-wrongBJ)/xiuzheng)
 		RGe1[j].append(meanvalue(RGe1array[j],2*n-wrongRG)/xiuzheng)
 		RGe2[j].append(meanvalue(RGe2array[j],2*n-wrongRG)/xiuzheng)
+		FQe1[j].append(meanvalue(FQe1array[j],2*n)/meanvalue(FQnarray[j],2*n))
+		FQe2[j].append(meanvalue(FQe2array[j],2*n)/meanvalue(FQnarray[j],2*n))
 		#Me1[j].append(meanvalue(Me1array[j],2*n)/xiuzheng)
 		#Me2[j].append(meanvalue(Me2array[j],2*n)/xiuzheng)
 		#Wucha[j].append((meansquare(RGe1array[j],2*n)/10000)**0.5)
+
 snra = []
 for i in range(4):
 	snra.append(meanvalue(snrarray[i],2*n))
@@ -166,23 +180,31 @@ colorname = ["red","green","blue","yellow"]
 galname = ["Gaussian","Exponential","Devaucouleurs","Sersic"]
 markername = ['+','o','*','x']
 colorn = ['r','g','b','y']
-for i in range(4):
+for i in range(6):
 	if i == 0:
 		g = g10
 		ea = BJe1 
-		figure = fig.add_subplot(221)
+		figure = fig.add_subplot(321)
 	elif i == 1:
 		g = g20
 		ea = BJe2
-		figure = fig.add_subplot(222)
+		figure = fig.add_subplot(322)
 	elif i == 2:
 		g = g10
 		ea = RGe1
-		figure = fig.add_subplot(223)
-	else :
+		figure = fig.add_subplot(323)
+	elif i == 3:
 		g = g20
 		ea = RGe2
-		figure = fig.add_subplot(224)
+		figure = fig.add_subplot(324)
+	elif i == 4:
+		g = g10
+		ea = FQe1
+		figure = fig.add_subplot(325)
+	else:
+		g = g20
+		ea = FQe2
+		figure = fig.add_subplot(326)
 	figure.plot(xf,xf,color="black")
 	for j in range(4):
 		g = numpy.array(g)
@@ -192,9 +214,8 @@ for i in range(4):
 		figure.plot(xf,yf,color=colorname[j],label="%s y=%fx+%f"%(galname[j],a,b))
 		figure.scatter(g,e,marker=markername[j],color=colorn[j])
 		figure.set_title("The GS's snr:%.2f The EX's snr:%.2f The DV's snr:%.2f The SS's snr%.2f"%(snra[0],snra[1],snra[2],snra[3]))
-		figure.legend(loc='lower right')
+		figure.legend(loc='lower right',fontsize=10)
 plt.show()
-		
 """
 	for j in range(4):
 		sheet.write(j+4*i+1,0,g10[i])

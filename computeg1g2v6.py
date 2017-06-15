@@ -25,8 +25,8 @@ gal_e_min=0.
 gal_e_max=0.8
 psf_fwhm=[1.5,0.7,0.6,0.5]
 psf_beta=[2.4,2.5,2.3,1.5]
-n = 2500
-m = 4
+n = 500
+m = 10
 xiuzheng = 1.82
 xz = [1,-1]
 k = 0
@@ -100,15 +100,17 @@ for i in range(m):
 		for l in range(n):
 			BJpeerdelete = 0
 			RGpeerdelete = 0
-			for p in range(2):
-				k += 1
-				rng=galsim.UniformDeviate(random_seed+k+1)
-				flux=rng()*(gal_flux_max-gal_flux_min)+gal_flux_min
-				this_gal=gal[j].withFlux(flux)
-				hlr=rng()*(gal_hlr_max-gal_hlr_min)+gal_hlr_min
-				this_gal=this_gal.dilate(hlr)
-				this_gal=this_gal.shear(e1=xz[p]*e10[l],e2=xz[p]*e20[l]).shear(g1=g10[i],g2=g20[i])
-				final=galsim.Convolve([this_gal,psf])
+			k += 1
+			rng=galsim.UniformDeviate(random_seed+k+1)
+			flux=rng()*(gal_flux_max-gal_flux_min)+gal_flux_min
+			this_gal=gal[j].withFlux(flux)
+			hlr=rng()*(gal_hlr_max-gal_hlr_min)+gal_hlr_min
+			this_gal=this_gal.dilate(hlr)
+			this_gal=this_gal.shear(e1=e10[l],e2=e20[l])
+			for p in range(4):
+				this_gal_r = this_gal.rotate(theta = p*45*galsim.degrees)
+				this_gal_r = this_gal_r.shear(g1 = g10[i],g2 = g20[i])
+				final=galsim.Convolve([this_gal_r,psf])
 				#print(rng())
 				image=galsim.ImageF(nx,ny,scale=pixel_scale)
 				image0=galsim.ImageF(nx,ny,scale=pixel_scale)
@@ -161,12 +163,12 @@ for i in range(m):
 				#Me1array[j].append(e1)
 				#Me2array[j].append(e2)
 	for j in range(4):
-		BJe1[j].append(meanvalue(BJe1array[j],2*n-wrongBJ)/xiuzheng)
-		BJe2[j].append(meanvalue(BJe2array[j],2*n-wrongBJ)/xiuzheng)
-		RGe1[j].append(meanvalue(RGe1array[j],2*n-wrongRG)/xiuzheng)
-		RGe2[j].append(meanvalue(RGe2array[j],2*n-wrongRG)/xiuzheng)
-		FQe1[j].append(meanvalue(FQe1array[j],2*n)/meanvalue(FQnarray[j],2*n))
-		FQe2[j].append(meanvalue(FQe2array[j],2*n)/meanvalue(FQnarray[j],2*n))
+		BJe1[j].append(meanvalue(BJe1array[j],4*n-2*wrongBJ)/xiuzheng)
+		BJe2[j].append(meanvalue(BJe2array[j],4*n-2*wrongBJ)/xiuzheng)
+		RGe1[j].append(meanvalue(RGe1array[j],4*n-2*wrongRG)/xiuzheng)
+		RGe2[j].append(meanvalue(RGe2array[j],4*n-2*wrongRG)/xiuzheng)
+		FQe1[j].append(meanvalue(FQe1array[j],4*n)/meanvalue(FQnarray[j],4*n))
+		FQe2[j].append(meanvalue(FQe2array[j],4*n)/meanvalue(FQnarray[j],4*n))
 		#Me1[j].append(meanvalue(Me1array[j],2*n)/xiuzheng)
 		#Me2[j].append(meanvalue(Me2array[j],2*n)/xiuzheng)
 		#Wucha[j].append((meansquare(RGe1array[j],2*n)/10000)**0.5)

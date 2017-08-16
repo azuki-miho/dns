@@ -25,7 +25,7 @@ gal_e_min=0.
 gal_e_max=0.8
 psf_fwhm=[1.5,0.7,0.6,0.5]
 psf_beta=[2.4,2.5,2.3,1.5]
-n = 100
+n = 10
 m = 10
 xz = [1,-1]
 k = 0
@@ -99,7 +99,6 @@ for i in range(m):
 	Me2array = [[],[],[],[]]
 	for j in range(4):
 		for l in range(n):
-			print l
 			BJpeerdelete = 0
 			RGpeerdelete = 0
 			k += 1
@@ -165,10 +164,14 @@ for i in range(m):
 				#Me1array[j].append(e1)
 				#Me2array[j].append(e2)
 	for j in range(4):
-		BJe1[j].append(meanvalue(BJe1array[j],4*n-2*wrongBJ)/(2-meansquare(BJe1array[j],4*n-2*wrongBJ)))
-		BJe2[j].append(meanvalue(BJe2array[j],4*n-2*wrongBJ)/(2-meansquare(BJe2array[j],4*n-2*wrongBJ)))
-		RGe1[j].append(meanvalue(RGe1array[j],4*n-2*wrongRG)/(2-meansquare(RGe1array[j],4*n-2*wrongRG)))
-		RGe2[j].append(meanvalue(RGe2array[j],4*n-2*wrongRG)/(2-meansquare(RGe2array[j],4*n-2*wrongRG)))
+		BJe1meansquare = meansquare(BJe1array[j],4*n-2*wrongBJ)
+		BJe2meansquare = meansquare(BJe2array[j],4*n-2*wrongBJ)
+		RGe1meansquare = meansquare(RGe1array[j],4*n-2*wrongRG)
+		RGe2meansquare = meansquare(RGe2array[j],4*n-2*wrongRG)
+		BJe1[j].append(meanvalue(BJe1array[j],4*n-2*wrongBJ)/(2-BJe1meansquare-BJe2meansquare))
+		BJe2[j].append(meanvalue(BJe2array[j],4*n-2*wrongBJ)/(2-BJe1meansquare-BJe2meansquare))
+		RGe1[j].append(meanvalue(RGe1array[j],4*n-2*wrongRG)/(2-RGe1meansquare-RGe2meansquare))
+		RGe2[j].append(meanvalue(RGe2array[j],4*n-2*wrongRG)/(2-RGe1meansquare-RGe2meansquare))
 		FQe1[j].append(meanvalue(FQe1array[j],4*n)/meanvalue(FQnarray[j],4*n))
 		FQe2[j].append(meanvalue(FQe2array[j],4*n)/meanvalue(FQnarray[j],4*n))
 		#Me1[j].append(meanvalue(Me1array[j],2*n)/xiuzheng)
@@ -181,43 +184,48 @@ for i in range(4):
 fig=plt.figure()
 xf = numpy.linspace(-0.01,0.01,100)
 colorname = ["red","green","blue","yellow"]
-galname = ["Gaussian","Exponential","Devaucouleurs","Sersic"]
+galname = ["GS","EX","DV","SS"]
 markername = ['+','o','*','x']
 colorn = ['r','g','b','y']
 for i in range(6):
 	if i == 0:
 		g = g10
 		ea = BJe1 
-		figure = fig.add_subplot(321)
+		figure = fig.add_subplot(231)
+		plt.ylabel("g1")
 	elif i == 1:
 		g = g20
 		ea = BJe2
-		figure = fig.add_subplot(322)
+		figure = fig.add_subplot(234)
+		plt.xlabel("BJ02")
+		plt.ylabel("g2")
 	elif i == 2:
 		g = g10
 		ea = RGe1
-		figure = fig.add_subplot(323)
+		figure = fig.add_subplot(232)
 	elif i == 3:
 		g = g20
 		ea = RGe2
-		figure = fig.add_subplot(324)
+		figure = fig.add_subplot(235)
+		plt.xlabel("RG03")
 	elif i == 4:
 		g = g10
 		ea = FQe1
-		figure = fig.add_subplot(325)
+		figure = fig.add_subplot(233)
 	else:
 		g = g20
 		ea = FQe2
-		figure = fig.add_subplot(326)
+		figure = fig.add_subplot(236)
+		plt.xlabel("Z11")
 	figure.plot(xf,xf,color="black")
 	for j in range(4):
 		g = numpy.array(g)
 		e = numpy.array(ea[j])
 		a,b,r = linematch(g,e)
 		yf = a*xf+b
-		figure.plot(xf,yf,color=colorname[j],label="%s y=%fx+%f"%(galname[j],a,b))
+		figure.plot(xf,yf,color=colorname[j],label="%s y=%.4fx+%.4f"%(galname[j],a,b))
 		figure.scatter(g,e,marker=markername[j],color=colorn[j])
-		figure.set_title("The GS's snr:%.2f The EX's snr:%.2f The DV's snr:%.2f The SS's snr%.2f"%(snra[0],snra[1],snra[2],snra[3]))
+		figure.set_title("The GS's snr:%d The EX's snr:%d The DV's snr:%d The SS's snr%d"%(snra[0],snra[1],snra[2],snra[3]),fontsize=8)
 		figure.legend(loc='lower right',fontsize=10)
 plt.show()
 """

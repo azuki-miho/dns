@@ -25,8 +25,8 @@ gal_e_min=0.
 gal_e_max=0.8
 psf_fwhm=[1.5,0.7,0.6,0.5]
 psf_beta=[2.4,2.5,2.3,1.5]
-n = 10
-m = 10
+n = 10000
+m = 20
 xz = [1,-1]
 k = 0
 """
@@ -85,8 +85,6 @@ Me2 = [[],[],[],[]]
 #Wucha = [[],[],[],[]]
 snrarray = [[],[],[],[]]
 for i in range(m):
-	wrongBJ = 0
-	wrongRG = 0
 	print i
 	BJe1array = [[],[],[],[]]
 	BJe2array = [[],[],[],[]]
@@ -98,6 +96,8 @@ for i in range(m):
 	Me1array = [[],[],[],[]]
 	Me2array = [[],[],[],[]]
 	for j in range(4):
+		wrongBJ = 0
+		wrongRG = 0
 		for l in range(n):
 			BJpeerdelete = 0
 			RGpeerdelete = 0
@@ -132,46 +132,46 @@ for i in range(m):
 				if BJpeerdelete != 1:
 					rst = hsm.EstimateShear(image,final_epsf_image,shear_est='BJ')
 					if rst == 1:
-						wrongBJ = wrongBJ +2
+						wrongBJ = wrongBJ + 4
 						print "wrongBJ %f"%wrongBJ
 						if p == 0:
 							BJpeerdelete = 1
 						else:
-							BJe1array[j].pop()
-							BJe2array[j].pop()
-							
+							for sc in range(p):
+								BJe1array[j].pop()
+								BJe2array[j].pop()
 					else:
 						BJe1array[j].append(rst.corrected_e1)
 						BJe2array[j].append(rst.corrected_e2)
-				else:
+				if p == 3:
 					BJpeerdelete = 0
 				if RGpeerdelete != 1:
 					rst = hsm.EstimateShear(image,final_epsf_image,shear_est='REGAUSS')
 					if rst == 1:
-						wrongRG = wrongRG +2
+						wrongRG = wrongRG + 4
 						print "wrongRG %f"%wrongRG
 						if p==0:
 							RGpeerdelete = 1
 						else:
-							RGe1array[j].pop()
-							RGe2array[j].pop()
+							for sc in range(p):
+								RGe1array[j].pop()
+								RGe2array[j].pop()
 					else:
 						RGe1array[j].append(rst.corrected_e1)
 						RGe2array[j].append(rst.corrected_e2)
-				else:
+				if p == 3:
 					RGpeerdelete = 0
 				#e1,e2 = elli(image.array)
 				#Me1array[j].append(e1)
 				#Me2array[j].append(e2)
-	for j in range(4):
-		BJe1meansquare = meansquare(BJe1array[j],4*n-2*wrongBJ)
-		BJe2meansquare = meansquare(BJe2array[j],4*n-2*wrongBJ)
-		RGe1meansquare = meansquare(RGe1array[j],4*n-2*wrongRG)
-		RGe2meansquare = meansquare(RGe2array[j],4*n-2*wrongRG)
-		BJe1[j].append(meanvalue(BJe1array[j],4*n-2*wrongBJ)/(2-BJe1meansquare-BJe2meansquare))
-		BJe2[j].append(meanvalue(BJe2array[j],4*n-2*wrongBJ)/(2-BJe1meansquare-BJe2meansquare))
-		RGe1[j].append(meanvalue(RGe1array[j],4*n-2*wrongRG)/(2-RGe1meansquare-RGe2meansquare))
-		RGe2[j].append(meanvalue(RGe2array[j],4*n-2*wrongRG)/(2-RGe1meansquare-RGe2meansquare))
+		BJe1meansquare = meansquare(BJe1array[j],4*n-wrongBJ)
+		BJe2meansquare = meansquare(BJe2array[j],4*n-wrongBJ)
+		RGe1meansquare = meansquare(RGe1array[j],4*n-wrongRG)
+		RGe2meansquare = meansquare(RGe2array[j],4*n-wrongRG)
+		BJe1[j].append(meanvalue(BJe1array[j],4*n-wrongBJ)/(2-BJe1meansquare-BJe2meansquare))
+		BJe2[j].append(meanvalue(BJe2array[j],4*n-wrongBJ)/(2-BJe1meansquare-BJe2meansquare))
+		RGe1[j].append(meanvalue(RGe1array[j],4*n-wrongRG)/(2-RGe1meansquare-RGe2meansquare))
+		RGe2[j].append(meanvalue(RGe2array[j],4*n-wrongRG)/(2-RGe1meansquare-RGe2meansquare))
 		FQe1[j].append(meanvalue(FQe1array[j],4*n)/meanvalue(FQnarray[j],4*n))
 		FQe2[j].append(meanvalue(FQe2array[j],4*n)/meanvalue(FQnarray[j],4*n))
 		#Me1[j].append(meanvalue(Me1array[j],2*n)/xiuzheng)
@@ -217,6 +217,9 @@ for i in range(6):
 		ea = FQe2
 		figure = fig.add_subplot(236)
 		plt.xlabel("Z11")
+	figure.set_aspect("equal")
+	figure.set_xlim(-0.01,0.01)
+	figure.set_ylim(-0.01,0.01)
 	figure.plot(xf,xf,color="black")
 	for j in range(4):
 		g = numpy.array(g)

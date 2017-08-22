@@ -11,11 +11,9 @@ from mydns import *
 import matplotlib.pyplot as plt
 from Fourier_Quad import Fourier_Quad
 
-f = open("./20170822/20170822","w")
-
 FQ = Fourier_Quad()
 random_seed=553728
-sky_level=1.e4
+sky_level=1.e1
 pixel_scale=0.28
 nx=64
 ny=64
@@ -27,8 +25,8 @@ gal_e_min=0.
 gal_e_max=0.8
 psf_fwhm=[1.5,0.7,0.6,0.5]
 psf_beta=[2.4,2.5,2.3,1.5]
-n = 100
-m = 20
+n = 10
+m = 10
 xz = [1,-1]
 k = 0
 """
@@ -86,8 +84,6 @@ Me1 = [[],[],[],[]]
 Me2 = [[],[],[],[]]
 #Wucha = [[],[],[],[]]
 snrarray = [[],[],[],[]]
-wrongBJarray = [[],[],[],[]]
-wrongRGarray = [[],[],[],[]]
 for i in range(m):
 	print i
 	BJe1array = [[],[],[],[]]
@@ -137,6 +133,7 @@ for i in range(m):
 					rst = hsm.EstimateShear(image,final_epsf_image,shear_est='BJ')
 					if rst == 1:
 						wrongBJ = wrongBJ + 4
+						print "wrongBJ %f"%wrongBJ
 						if p == 0:
 							BJpeerdelete = 1
 						else:
@@ -152,6 +149,7 @@ for i in range(m):
 					rst = hsm.EstimateShear(image,final_epsf_image,shear_est='REGAUSS')
 					if rst == 1:
 						wrongRG = wrongRG + 4
+						print "wrongRG %f"%wrongRG
 						if p==0:
 							RGpeerdelete = 1
 						else:
@@ -176,26 +174,18 @@ for i in range(m):
 		RGe2[j].append(meanvalue(RGe2array[j],4*n-wrongRG)/(2-RGe1meansquare-RGe2meansquare))
 		FQe1[j].append(meanvalue(FQe1array[j],4*n)/meanvalue(FQnarray[j],4*n))
 		FQe2[j].append(meanvalue(FQe2array[j],4*n)/meanvalue(FQnarray[j],4*n))
-		f.write("wrongBJ %f\n"%wrongBJ)
-		f.write("wrongRG %f\n"%wrongRG)
-		wrongBJarray[j].append(wrongBJ)
-		wrongRGarray[j].append(wrongRG)
 		#Me1[j].append(meanvalue(Me1array[j],2*n)/xiuzheng)
 		#Me2[j].append(meanvalue(Me2array[j],2*n)/xiuzheng)
 		#Wucha[j].append((meansquare(RGe1array[j],2*n)/10000)**0.5)
 
-galname = ["GS","EX","DV","SS"]
-f.write("final\n")
-for j in range(4):
-	f.write(galname[j]+"wrongBJ%f\n"%meanvalue(wrongBJarray[j],m))
-	f.write(galname[j]+"wrongRG%f\n"%meanvalue(wrongRGarray[j],m))
-f.close()
 snra = []
 for i in range(4):
 	snra.append(meanvalue(snrarray[i],2*n))
 fig=plt.figure()
+plt.axes().set_aspect("equal","datalim")
 xf = numpy.linspace(-0.01,0.01,100)
 colorname = ["red","green","blue","yellow"]
+galname = ["GS","EX","DV","SS"]
 markername = ['+','o','*','x']
 colorn = ['r','g','b','y']
 for i in range(6):
@@ -228,9 +218,7 @@ for i in range(6):
 		ea = FQe2
 		figure = fig.add_subplot(236)
 		plt.xlabel("Z11")
-	figure.set_aspect("equal")
-	figure.set_xlim(-0.01,0.01)
-	figure.set_ylim(-0.01,0.01)
+	plt.axes().set_aspect("equal","datalim")
 	figure.plot(xf,xf,color="black")
 	for j in range(4):
 		g = numpy.array(g)
@@ -242,7 +230,6 @@ for i in range(6):
 		figure.set_title("The GS's snr:%d The EX's snr:%d The DV's snr:%d The SS's snr%d"%(snra[0],snra[1],snra[2],snra[3]),fontsize=8)
 		figure.legend(loc='lower right',fontsize=10)
 plt.show()
-
 """
 	for j in range(4):
 		sheet.write(j+4*i+1,0,g10[i])

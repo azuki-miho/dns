@@ -11,11 +11,9 @@ from mydns import *
 import matplotlib.pyplot as plt
 from Fourier_Quad import Fourier_Quad
 
-f = open("./20170822/20170822","w")
-
 FQ = Fourier_Quad()
 random_seed=553728
-sky_level=1.e4
+sky_level=1.e1
 pixel_scale=0.28
 nx=64
 ny=64
@@ -27,8 +25,9 @@ gal_e_min=0.
 gal_e_max=0.8
 psf_fwhm=[1.5,0.7,0.6,0.5]
 psf_beta=[2.4,2.5,2.3,1.5]
-n = 100
-m = 20
+n = 1
+m = 1
+xiuzheng = 1.82
 xz = [1,-1]
 k = 0
 """
@@ -45,11 +44,9 @@ sheet.write(0,6,'Me1')
 sheet.write(0,7,'Me2')
 sheet.write(0,8,'wucha')
 """
-sigma1 = 0.3
-sigma2 = 0.3
-e10 =numpy.random.normal(loc=0.0,scale=sigma1,size=n)
-e20 =numpy.random.normal(loc=0.0,scale=sigma2,size=n)
-g10 =numpy.random.uniform(-0.01,0.01,m)
+e10 =[0.3]
+e20 =numpy.random.normal(loc=0.0,scale=0.3,size=n)
+g10 =[0.1]
 g20 =numpy.random.uniform(-0.01,0.01,m)
 for i in range(n):
 	e20[i] = 0
@@ -86,9 +83,9 @@ Me1 = [[],[],[],[]]
 Me2 = [[],[],[],[]]
 #Wucha = [[],[],[],[]]
 snrarray = [[],[],[],[]]
-wrongBJarray = [[],[],[],[]]
-wrongRGarray = [[],[],[],[]]
 for i in range(m):
+	wrongBJ = 0
+	wrongRG = 0
 	print i
 	BJe1array = [[],[],[],[]]
 	BJe2array = [[],[],[],[]]
@@ -100,8 +97,6 @@ for i in range(m):
 	Me1array = [[],[],[],[]]
 	Me2array = [[],[],[],[]]
 	for j in range(4):
-		wrongBJ = 0
-		wrongRG = 0
 		for l in range(n):
 			BJpeerdelete = 0
 			RGpeerdelete = 0
@@ -112,7 +107,7 @@ for i in range(m):
 			hlr=rng()*(gal_hlr_max-gal_hlr_min)+gal_hlr_min
 			this_gal=this_gal.dilate(hlr)
 			this_gal=this_gal.shear(e1=e10[l],e2=e20[l])
-			for p in range(4):
+			for p in range(1):
 				this_gal_r = this_gal.rotate(theta = p*45*galsim.degrees)
 				this_gal_r = this_gal_r.shear(g1 = g10[i],g2 = g20[i])
 				final=galsim.Convolve([this_gal_r,psf])
@@ -136,113 +131,94 @@ for i in range(m):
 				if BJpeerdelete != 1:
 					rst = hsm.EstimateShear(image,final_epsf_image,shear_est='BJ')
 					if rst == 1:
-						wrongBJ = wrongBJ + 4
+						wrongBJ = wrongBJ +2
+						print "wrongBJ %f"%wrongBJ
 						if p == 0:
 							BJpeerdelete = 1
 						else:
-							for sc in range(p):
-								BJe1array[j].pop()
-								BJe2array[j].pop()
+							BJe1array[j].pop()
+							BJe2array[j].pop()
+							
 					else:
 						BJe1array[j].append(rst.corrected_e1)
+						print(rst.corrected_e1)
 						BJe2array[j].append(rst.corrected_e2)
-				if p == 3:
+				else:
 					BJpeerdelete = 0
 				if RGpeerdelete != 1:
 					rst = hsm.EstimateShear(image,final_epsf_image,shear_est='REGAUSS')
 					if rst == 1:
-						wrongRG = wrongRG + 4
+						wrongRG = wrongRG +2
+						print "wrongRG %f"%wrongRG
 						if p==0:
 							RGpeerdelete = 1
 						else:
-							for sc in range(p):
-								RGe1array[j].pop()
-								RGe2array[j].pop()
+							RGe1array[j].pop()
+							RGe2array[j].pop()
 					else:
 						RGe1array[j].append(rst.corrected_e1)
 						RGe2array[j].append(rst.corrected_e2)
-				if p == 3:
+				else:
 					RGpeerdelete = 0
 				#e1,e2 = elli(image.array)
 				#Me1array[j].append(e1)
 				#Me2array[j].append(e2)
-		BJe1meansquare = meansquare(BJe1array[j],4*n-wrongBJ)
-		BJe2meansquare = meansquare(BJe2array[j],4*n-wrongBJ)
-		RGe1meansquare = meansquare(RGe1array[j],4*n-wrongRG)
-		RGe2meansquare = meansquare(RGe2array[j],4*n-wrongRG)
-		BJe1[j].append(meanvalue(BJe1array[j],4*n-wrongBJ)/(2-BJe1meansquare-BJe2meansquare))
-		BJe2[j].append(meanvalue(BJe2array[j],4*n-wrongBJ)/(2-BJe1meansquare-BJe2meansquare))
-		RGe1[j].append(meanvalue(RGe1array[j],4*n-wrongRG)/(2-RGe1meansquare-RGe2meansquare))
-		RGe2[j].append(meanvalue(RGe2array[j],4*n-wrongRG)/(2-RGe1meansquare-RGe2meansquare))
+	for j in range(4):
+		BJe1[j].append(meanvalue(BJe1array[j],4*n-2*wrongBJ)/xiuzheng)
+		BJe2[j].append(meanvalue(BJe2array[j],4*n-2*wrongBJ)/xiuzheng)
+		RGe1[j].append(meanvalue(RGe1array[j],4*n-2*wrongRG)/xiuzheng)
+		RGe2[j].append(meanvalue(RGe2array[j],4*n-2*wrongRG)/xiuzheng)
 		FQe1[j].append(meanvalue(FQe1array[j],4*n)/meanvalue(FQnarray[j],4*n))
 		FQe2[j].append(meanvalue(FQe2array[j],4*n)/meanvalue(FQnarray[j],4*n))
-		f.write("wrongBJ %f\n"%wrongBJ)
-		f.write("wrongRG %f\n"%wrongRG)
-		wrongBJarray[j].append(wrongBJ)
-		wrongRGarray[j].append(wrongRG)
 		#Me1[j].append(meanvalue(Me1array[j],2*n)/xiuzheng)
 		#Me2[j].append(meanvalue(Me2array[j],2*n)/xiuzheng)
 		#Wucha[j].append((meansquare(RGe1array[j],2*n)/10000)**0.5)
 
-galname = ["GS","EX","DV","SS"]
-f.write("final\n")
-for j in range(4):
-	f.write(galname[j]+"wrongBJ%f\n"%meanvalue(wrongBJarray[j],m))
-	f.write(galname[j]+"wrongRG%f\n"%meanvalue(wrongRGarray[j],m))
-f.close()
 snra = []
 for i in range(4):
 	snra.append(meanvalue(snrarray[i],2*n))
 fig=plt.figure()
 xf = numpy.linspace(-0.01,0.01,100)
 colorname = ["red","green","blue","yellow"]
+galname = ["Gaussian","Exponential","Devaucouleurs","Sersic"]
 markername = ['+','o','*','x']
 colorn = ['r','g','b','y']
 for i in range(6):
 	if i == 0:
 		g = g10
 		ea = BJe1 
-		figure = fig.add_subplot(231)
-		plt.ylabel("g1")
+		figure = fig.add_subplot(321)
 	elif i == 1:
 		g = g20
 		ea = BJe2
-		figure = fig.add_subplot(234)
-		plt.xlabel("BJ02")
-		plt.ylabel("g2")
+		figure = fig.add_subplot(322)
 	elif i == 2:
 		g = g10
 		ea = RGe1
-		figure = fig.add_subplot(232)
+		figure = fig.add_subplot(323)
 	elif i == 3:
 		g = g20
 		ea = RGe2
-		figure = fig.add_subplot(235)
-		plt.xlabel("RG03")
+		figure = fig.add_subplot(324)
 	elif i == 4:
 		g = g10
 		ea = FQe1
-		figure = fig.add_subplot(233)
+		figure = fig.add_subplot(325)
 	else:
 		g = g20
 		ea = FQe2
-		figure = fig.add_subplot(236)
-		plt.xlabel("Z11")
-	figure.set_aspect("equal")
-	figure.set_xlim(-0.01,0.01)
-	figure.set_ylim(-0.01,0.01)
+		figure = fig.add_subplot(326)
 	figure.plot(xf,xf,color="black")
 	for j in range(4):
 		g = numpy.array(g)
 		e = numpy.array(ea[j])
 		a,b,r = linematch(g,e)
 		yf = a*xf+b
-		figure.plot(xf,yf,color=colorname[j],label="%s y=%.4fx+%.4f"%(galname[j],a,b))
+		figure.plot(xf,yf,color=colorname[j],label="%s y=%fx+%f"%(galname[j],a,b))
 		figure.scatter(g,e,marker=markername[j],color=colorn[j])
-		figure.set_title("The GS's snr:%d The EX's snr:%d The DV's snr:%d The SS's snr%d"%(snra[0],snra[1],snra[2],snra[3]),fontsize=8)
+		figure.set_title("The GS's snr:%.2f The EX's snr:%.2f The DV's snr:%.2f The SS's snr%.2f"%(snra[0],snra[1],snra[2],snra[3]))
 		figure.legend(loc='lower right',fontsize=10)
 plt.show()
-
 """
 	for j in range(4):
 		sheet.write(j+4*i+1,0,g10[i])

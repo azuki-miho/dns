@@ -15,7 +15,7 @@ f = open("./20170822/20170822","w")
 
 FQ = Fourier_Quad()
 random_seed=553728
-sky_level=1.e4
+sky_level=4.e3
 pixel_scale=0.28
 nx=64
 ny=64
@@ -27,7 +27,7 @@ gal_e_min=0.
 gal_e_max=0.8
 psf_fwhm=[1.5,0.7,0.6,0.5]
 psf_beta=[2.4,2.5,2.3,1.5]
-n = 100
+n = 10000
 m = 20
 xz = [1,-1]
 k = 0

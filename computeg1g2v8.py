@@ -27,14 +27,16 @@ gal_e_min=0.
 gal_e_max=0.8
 psf_fwhm=[1.5,0.7,0.6,0.5]
 psf_beta=[2.4,2.5,2.3,1.5]
-n = 100
+n = 10000
 m = 20
 xz = [1,-1]
 k = 0
-"""
-xieru = xlwt.Workbook()
-sheet = xieru.add_sheet(u'sheet1',cell_overwrite_ok=True)
 
+xieru = xlwt.Workbook()
+sheet1 = xieru.add_sheet(u'g1',cell_overwrite_ok=True)
+sheet2 = xieru.add_sheet(u'g2',cell_overwrite_ok=True)
+
+"""
 sheet.write(0,0,'g1')
 sheet.write(0,1,'g2')
 sheet.write(0,2,'BJe1')
@@ -183,6 +185,23 @@ for i in range(m):
 		#Me1[j].append(meanvalue(Me1array[j],2*n)/xiuzheng)
 		#Me2[j].append(meanvalue(Me2array[j],2*n)/xiuzheng)
 		#Wucha[j].append((meansquare(RGe1array[j],2*n)/10000)**0.5)
+
+for i in range(m):
+	sheet1.write(i,0,g10[i])
+	sheet1.write(m+i,0,g10[i])
+	sheet1.write(2*m+i,0,g10[i])
+	sheet2.write(i,0,g20[i])
+	sheet2.write(m+i,0,g20[i])
+	sheet2.write(2*m+i,0,g20[i])
+	for j in range(4):
+		sheet1.write(i,j+1,BJe1[j][i])
+		sheet1.write(i+m,j+1,RGe1[j][i])
+		sheet1.write(i+m*2,j+1,FQe1[j][i])
+		sheet2.write(i,j+1,BJe2[j][i])
+		sheet2.write(i+m,j+1,RGe2[j][i])
+		sheet2.write(i+m*2,j+1,FQe2[j][i])
+
+xieru.save("g1g2.xlsx")
 
 galname = ["GS","EX","DV","SS"]
 f.write("final\n")

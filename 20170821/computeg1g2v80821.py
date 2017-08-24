@@ -11,6 +11,8 @@ from mydns import *
 import matplotlib.pyplot as plt
 from Fourier_Quad import Fourier_Quad
 
+f = open("./20170821/20170821","w")
+
 FQ = Fourier_Quad()
 random_seed=553728
 sky_level=1.e1
@@ -29,10 +31,12 @@ n = 10000
 m = 20
 xz = [1,-1]
 k = 0
-"""
-xieru = xlwt.Workbook()
-sheet = xieru.add_sheet(u'sheet1',cell_overwrite_ok=True)
 
+xieru = xlwt.Workbook()
+sheet1 = xieru.add_sheet(u'g1',cell_overwrite_ok=True)
+sheet2 = xieru.add_sheet(u'g2',cell_overwrite_ok=True)
+
+"""
 sheet.write(0,0,'g1')
 sheet.write(0,1,'g2')
 sheet.write(0,2,'BJe1')
@@ -84,6 +88,8 @@ Me1 = [[],[],[],[]]
 Me2 = [[],[],[],[]]
 #Wucha = [[],[],[],[]]
 snrarray = [[],[],[],[]]
+wrongBJarray = [[],[],[],[]]
+wrongRGarray = [[],[],[],[]]
 for i in range(m):
 	print i
 	BJe1array = [[],[],[],[]]
@@ -133,7 +139,6 @@ for i in range(m):
 					rst = hsm.EstimateShear(image,final_epsf_image,shear_est='BJ')
 					if rst == 1:
 						wrongBJ = wrongBJ + 4
-						print "wrongBJ %f"%wrongBJ
 						if p == 0:
 							BJpeerdelete = 1
 						else:
@@ -149,7 +154,6 @@ for i in range(m):
 					rst = hsm.EstimateShear(image,final_epsf_image,shear_est='REGAUSS')
 					if rst == 1:
 						wrongRG = wrongRG + 4
-						print "wrongRG %f"%wrongRG
 						if p==0:
 							RGpeerdelete = 1
 						else:
@@ -174,17 +178,43 @@ for i in range(m):
 		RGe2[j].append(meanvalue(RGe2array[j],4*n-wrongRG)/(2-RGe1meansquare-RGe2meansquare))
 		FQe1[j].append(meanvalue(FQe1array[j],4*n)/meanvalue(FQnarray[j],4*n))
 		FQe2[j].append(meanvalue(FQe2array[j],4*n)/meanvalue(FQnarray[j],4*n))
+		f.write("wrongBJ %f\n"%wrongBJ)
+		f.write("wrongRG %f\n"%wrongRG)
+		wrongBJarray[j].append(wrongBJ)
+		wrongRGarray[j].append(wrongRG)
 		#Me1[j].append(meanvalue(Me1array[j],2*n)/xiuzheng)
 		#Me2[j].append(meanvalue(Me2array[j],2*n)/xiuzheng)
 		#Wucha[j].append((meansquare(RGe1array[j],2*n)/10000)**0.5)
 
+for i in range(m):
+	sheet1.write(i,0,g10[i])
+	sheet1.write(m+i,0,g10[i])
+	sheet1.write(2*m+i,0,g10[i])
+	sheet2.write(i,0,g20[i])
+	sheet2.write(m+i,0,g20[i])
+	sheet2.write(2*m+i,0,g20[i])
+	for j in range(4):
+		sheet1.write(i,j+1,BJe1[j][i])
+		sheet1.write(i+m,j+1,RGe1[j][i])
+		sheet1.write(i+m*2,j+1,FQe1[j][i])
+		sheet2.write(i,j+1,BJe2[j][i])
+		sheet2.write(i+m,j+1,RGe2[j][i])
+		sheet2.write(i+m*2,j+1,FQe2[j][i])
+
+xieru.save("g1g20821.xlsx")
+
+galname = ["GS","EX","DV","SS"]
+f.write("final\n")
+for j in range(4):
+	f.write(galname[j]+"wrongBJ%f\n"%meanvalue(wrongBJarray[j],m))
+	f.write(galname[j]+"wrongRG%f\n"%meanvalue(wrongRGarray[j],m))
+f.close()
 snra = []
 for i in range(4):
 	snra.append(meanvalue(snrarray[i],2*n))
 fig=plt.figure()
 xf = numpy.linspace(-0.01,0.01,100)
 colorname = ["red","green","blue","yellow"]
-galname = ["GS","EX","DV","SS"]
 markername = ['+','o','*','x']
 colorn = ['r','g','b','y']
 for i in range(6):
@@ -231,6 +261,7 @@ for i in range(6):
 		figure.set_title("The GS's snr:%d The EX's snr:%d The DV's snr:%d The SS's snr%d"%(snra[0],snra[1],snra[2],snra[3]),fontsize=8)
 		figure.legend(loc='lower right',fontsize=10)
 plt.show()
+
 """
 	for j in range(4):
 		sheet.write(j+4*i+1,0,g10[i])

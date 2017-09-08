@@ -11,11 +11,11 @@ from mydns import *
 import matplotlib.pyplot as plt
 from Fourier_Quad import Fourier_Quad
 
-f = open("./20170827/20170827","w")
+f = open("./20170821/20170821","w")
 
 FQ = Fourier_Quad()
 random_seed=553728
-sky_level=12.e3
+sky_level=1.e1
 pixel_scale=0.28
 nx=64
 ny=64
@@ -201,18 +201,19 @@ for i in range(m):
 		sheet2.write(i+m,j+1,RGe2[j][i])
 		sheet2.write(i+m*2,j+1,FQe2[j][i])
 
-xieru.save("g1g20827.xlsx")
+xieru.save("./20170821/g1g20821.xlsx")
 
 galname = ["GS","EX","DV","SS"]
 f.write("final\n")
 for j in range(4):
 	f.write(galname[j]+"wrongBJ%f\n"%meanvalue(wrongBJarray[j],m))
 	f.write(galname[j]+"wrongRG%f\n"%meanvalue(wrongRGarray[j],m))
-f.close()
+
 snra = []
 for i in range(4):
 	snra.append(meanvalue(snrarray[i],2*n))
-fig=plt.figure()
+fig=plt.figure(figsize=(16,12))
+#plt.title('Results of Shear Estimation')
 xf = numpy.linspace(-0.01,0.01,100)
 colorname = ["red","green","blue","yellow"]
 markername = ['+','o','*','x']
@@ -233,6 +234,7 @@ for i in range(6):
 		g = g10
 		ea = RGe1
 		figure = fig.add_subplot(232)
+		plt.text(0.5, 1.2, 'Results of Shear Estimation',horizontalalignment='center',fontsize=30,transform = figure.transAxes)
 	elif i == 3:
 		g = g20
 		ea = RGe2
@@ -258,9 +260,10 @@ for i in range(6):
 		yf = a*xf+b
 		figure.plot(xf,yf,color=colorname[j],label="%s y=%.4fx+%.4f"%(galname[j],a,b))
 		figure.scatter(g,e,marker=markername[j],color=colorn[j])
-		figure.set_title("The GS's snr:%.1f The EX's snr:%.1f The DV's snr:%.1f The SS's snr%.1f"%(snra[0],snra[1],snra[2],snra[3]),fontsize=8)
 		figure.legend(loc='lower right',fontsize=10)
-plt.show()
+f.write("The GS's snr:%d The EX's snr:%d The DV's snr:%d The SS's snr%d"%(snra[0],snra[1],snra[2],snra[3]))
+f.close()
+plt.savefig('./20170821/20170821.eps')
 
 """
 	for j in range(4):

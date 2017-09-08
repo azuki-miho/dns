@@ -31,10 +31,12 @@ n = 10000
 m = 20
 xz = [1,-1]
 k = 0
-"""
-xieru = xlwt.Workbook()
-sheet = xieru.add_sheet(u'sheet1',cell_overwrite_ok=True)
 
+xieru = xlwt.Workbook()
+sheet1 = xieru.add_sheet(u'g1',cell_overwrite_ok=True)
+sheet2 = xieru.add_sheet(u'g2',cell_overwrite_ok=True)
+
+"""
 sheet.write(0,0,'g1')
 sheet.write(0,1,'g2')
 sheet.write(0,2,'BJe1')
@@ -184,16 +186,34 @@ for i in range(m):
 		#Me2[j].append(meanvalue(Me2array[j],2*n)/xiuzheng)
 		#Wucha[j].append((meansquare(RGe1array[j],2*n)/10000)**0.5)
 
+for i in range(m):
+	sheet1.write(i,0,g10[i])
+	sheet1.write(m+i,0,g10[i])
+	sheet1.write(2*m+i,0,g10[i])
+	sheet2.write(i,0,g20[i])
+	sheet2.write(m+i,0,g20[i])
+	sheet2.write(2*m+i,0,g20[i])
+	for j in range(4):
+		sheet1.write(i,j+1,BJe1[j][i])
+		sheet1.write(i+m,j+1,RGe1[j][i])
+		sheet1.write(i+m*2,j+1,FQe1[j][i])
+		sheet2.write(i,j+1,BJe2[j][i])
+		sheet2.write(i+m,j+1,RGe2[j][i])
+		sheet2.write(i+m*2,j+1,FQe2[j][i])
+
+xieru.save("./20170822/g1g20822.xlsx")
+
 galname = ["GS","EX","DV","SS"]
 f.write("final\n")
 for j in range(4):
 	f.write(galname[j]+"wrongBJ%f\n"%meanvalue(wrongBJarray[j],m))
 	f.write(galname[j]+"wrongRG%f\n"%meanvalue(wrongRGarray[j],m))
-f.close()
+
 snra = []
 for i in range(4):
 	snra.append(meanvalue(snrarray[i],2*n))
-fig=plt.figure()
+fig=plt.figure(figsize=(16,12))
+#plt.title('Results of Shear Estimation')
 xf = numpy.linspace(-0.01,0.01,100)
 colorname = ["red","green","blue","yellow"]
 markername = ['+','o','*','x']
@@ -214,6 +234,7 @@ for i in range(6):
 		g = g10
 		ea = RGe1
 		figure = fig.add_subplot(232)
+		plt.text(0.5, 1.2, 'Results of Shear Estimation',horizontalalignment='center',fontsize=30,transform = figure.transAxes)
 	elif i == 3:
 		g = g20
 		ea = RGe2
@@ -239,9 +260,10 @@ for i in range(6):
 		yf = a*xf+b
 		figure.plot(xf,yf,color=colorname[j],label="%s y=%.4fx+%.4f"%(galname[j],a,b))
 		figure.scatter(g,e,marker=markername[j],color=colorn[j])
-		figure.set_title("The GS's snr:%d The EX's snr:%d The DV's snr:%d The SS's snr%d"%(snra[0],snra[1],snra[2],snra[3]),fontsize=8)
 		figure.legend(loc='lower right',fontsize=10)
-plt.show()
+f.write("The GS's snr:%d The EX's snr:%d The DV's snr:%d The SS's snr%d"%(snra[0],snra[1],snra[2],snra[3]))
+f.close()
+plt.savefig('./20170822/20170822.eps')
 
 """
 	for j in range(4):

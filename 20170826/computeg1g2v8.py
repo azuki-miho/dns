@@ -11,11 +11,11 @@ from mydns import *
 import matplotlib.pyplot as plt
 from Fourier_Quad import Fourier_Quad
 
-f = open("./20170827/20170827","w")
+f = open("./20170826/20170826","w")
 
 FQ = Fourier_Quad()
 random_seed=553728
-sky_level=12.e3
+sky_level=1.e4
 pixel_scale=0.28
 nx=64
 ny=64
@@ -201,7 +201,7 @@ for i in range(m):
 		sheet2.write(i+m,j+1,RGe2[j][i])
 		sheet2.write(i+m*2,j+1,FQe2[j][i])
 
-xieru.save("g1g20827.xlsx")
+xieru.save("g1g20826.xlsx")
 
 galname = ["GS","EX","DV","SS"]
 f.write("final\n")
